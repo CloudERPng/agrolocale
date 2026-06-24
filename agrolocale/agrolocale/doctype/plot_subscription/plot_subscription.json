@@ -1,0 +1,198 @@
+{
+ "actions": [],
+ "creation": "2026-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "subscriber",
+  "estate",
+  "posting_date",
+  "payment_plan",
+  "cb1",
+  "subscription_status",
+  "realtor",
+  "realtor_group",
+  "sb1",
+  "sold_units",
+  "sb2",
+  "total_plot_count",
+  "land_value",
+  "cb2",
+  "developmental_fee",
+  "legal_documentation_fee",
+  "total_contract_value",
+  "sb3",
+  "payment_schedule",
+  "sb4",
+  "allocated_plots",
+  "sales_order"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "SUB-.YYYY.-",
+   "default": "SUB-.YYYY.-"
+  },
+  {
+   "fieldname": "subscriber",
+   "fieldtype": "Link",
+   "label": "Subscriber",
+   "options": "Customer",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "estate",
+   "fieldtype": "Link",
+   "label": "Estate",
+   "options": "Farm Estate",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date",
+   "reqd": 1,
+   "default": "Today"
+  },
+  {
+   "fieldname": "payment_plan",
+   "fieldtype": "Select",
+   "label": "Payment Plan",
+   "options": "Outright (0-3M)\n4-6M\n7-12M",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "subscription_status",
+   "fieldtype": "Select",
+   "label": "Subscription Status",
+   "options": "Active\nIn Default\nAllocated\nRevoked\nRefunded",
+   "default": "Active",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "realtor",
+   "fieldtype": "Data",
+   "label": "Realtor"
+  },
+  {
+   "fieldname": "realtor_group",
+   "fieldtype": "Data",
+   "label": "Realtor Group"
+  },
+  {
+   "fieldname": "sb1",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "sold_units",
+   "fieldtype": "Table",
+   "label": "Sold Units",
+   "options": "Sold Units",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sb2",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "total_plot_count",
+   "fieldtype": "Int",
+   "label": "Total Plot Count (actual)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "land_value",
+   "fieldtype": "Currency",
+   "label": "Land Value",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "developmental_fee",
+   "fieldtype": "Currency",
+   "label": "Developmental Fee"
+  },
+  {
+   "fieldname": "legal_documentation_fee",
+   "fieldtype": "Currency",
+   "label": "Legal Documentation Fee"
+  },
+  {
+   "fieldname": "total_contract_value",
+   "fieldtype": "Currency",
+   "label": "Total Contract Value",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb3",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "payment_schedule",
+   "fieldtype": "Table",
+   "label": "Payment Schedule",
+   "options": "Land Payment Schedule"
+  },
+  {
+   "fieldname": "sb4",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "allocated_plots",
+   "fieldtype": "Table",
+   "label": "Allocated Plots",
+   "options": "Plot Allocation Item",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sales_order",
+   "fieldtype": "Link",
+   "label": "Sales Order",
+   "options": "Sales Order",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Agrolocale",
+ "name": "Plot Subscription",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "write": 1
+  }
+ ],
+ "track_changes": 1,
+ "autoname": "naming_series:",
+ "title_field": "subscriber"
+}

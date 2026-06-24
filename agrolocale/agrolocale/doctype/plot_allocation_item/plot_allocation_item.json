@@ -1,0 +1,37 @@
+{
+ "actions": [],
+ "creation": "2026-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "land_plot",
+  "sold_as"
+ ],
+ "fields": [
+  {
+   "fieldname": "land_plot",
+   "fieldtype": "Link",
+   "label": "Land Plot",
+   "options": "Land Plot",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "sold_as",
+   "fieldtype": "Data",
+   "label": "Sold As",
+   "read_only": 1,
+   "in_list_view": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Agrolocale",
+ "name": "Plot Allocation Item",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "index_web_pages_for_search": 1,
+ "istable": 1
+}

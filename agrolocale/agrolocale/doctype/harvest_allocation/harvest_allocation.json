@@ -1,0 +1,76 @@
+{
+ "actions": [],
+ "creation": "2026-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "subscriber",
+  "cultivation_subscription",
+  "yield_kg",
+  "gross",
+  "company_cut",
+  "subscriber_payout",
+  "payout_status"
+ ],
+ "fields": [
+  {
+   "fieldname": "subscriber",
+   "fieldtype": "Link",
+   "label": "Subscriber",
+   "options": "Customer",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "cultivation_subscription",
+   "fieldtype": "Link",
+   "label": "Cultivation Subscription",
+   "options": "Cultivation Subscription"
+  },
+  {
+   "fieldname": "yield_kg",
+   "fieldtype": "Float",
+   "label": "Yield (kg)",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "gross",
+   "fieldtype": "Currency",
+   "label": "Gross",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "company_cut",
+   "fieldtype": "Currency",
+   "label": "Company 20%",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "subscriber_payout",
+   "fieldtype": "Currency",
+   "label": "Subscriber 80%",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "payout_status",
+   "fieldtype": "Select",
+   "label": "Payout Status",
+   "options": "Pending\nPaid",
+   "default": "Pending"
+  }
+ ],
+ "links": [],
+ "modified": "2026-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Agrolocale",
+ "name": "Harvest Allocation",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "index_web_pages_for_search": 1,
+ "istable": 1
+}

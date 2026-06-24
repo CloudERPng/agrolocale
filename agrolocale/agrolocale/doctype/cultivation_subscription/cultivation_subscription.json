@@ -1,0 +1,157 @@
+{
+ "actions": [],
+ "creation": "2026-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "subscriber",
+  "cultivation_cycle",
+  "eligibility_subscription",
+  "crop",
+  "cb1",
+  "status",
+  "number_of_plots",
+  "number_of_acres",
+  "sb1",
+  "setup_fee",
+  "expected_yield_kg",
+  "cb2",
+  "projected_revenue_min",
+  "projected_revenue_max",
+  "setup_invoice"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "CSUB-.YYYY.-",
+   "default": "CSUB-.YYYY.-"
+  },
+  {
+   "fieldname": "subscriber",
+   "fieldtype": "Link",
+   "label": "Subscriber",
+   "options": "Customer",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "cultivation_cycle",
+   "fieldtype": "Link",
+   "label": "Cultivation Cycle",
+   "options": "Cultivation Cycle",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "eligibility_subscription",
+   "fieldtype": "Link",
+   "label": "Eligibility (Land owned)",
+   "options": "Plot Subscription"
+  },
+  {
+   "fieldname": "crop",
+   "fieldtype": "Link",
+   "label": "Crop",
+   "options": "Crop",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Subscribed\nCultivating\nHarvested\nSettled",
+   "default": "Subscribed",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "number_of_plots",
+   "fieldtype": "Float",
+   "label": "Number of Plots",
+   "default": "0"
+  },
+  {
+   "fieldname": "number_of_acres",
+   "fieldtype": "Float",
+   "label": "Number of Acres",
+   "default": "0"
+  },
+  {
+   "fieldname": "sb1",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "setup_fee",
+   "fieldtype": "Currency",
+   "label": "Setup & Management Fee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "expected_yield_kg",
+   "fieldtype": "Float",
+   "label": "Expected Yield (kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "projected_revenue_min",
+   "fieldtype": "Currency",
+   "label": "Projected Revenue (min, 80%)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "projected_revenue_max",
+   "fieldtype": "Currency",
+   "label": "Projected Revenue (max, 80%)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "setup_invoice",
+   "fieldtype": "Link",
+   "label": "Setup Invoice",
+   "options": "Sales Invoice",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Agrolocale",
+ "name": "Cultivation Subscription",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "write": 1
+  }
+ ],
+ "track_changes": 1,
+ "autoname": "naming_series:",
+ "title_field": "subscriber"
+}

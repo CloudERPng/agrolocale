@@ -1,0 +1,129 @@
+{
+ "actions": [],
+ "creation": "2026-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "estate",
+  "source_acquisition",
+  "block",
+  "plot_number",
+  "size_sqm",
+  "is_corner_piece",
+  "cb1",
+  "status",
+  "current_subscriber",
+  "plot_subscription",
+  "sold_as"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "PLOT-.#####",
+   "default": "PLOT-.#####"
+  },
+  {
+   "fieldname": "estate",
+   "fieldtype": "Link",
+   "label": "Estate",
+   "options": "Farm Estate",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "source_acquisition",
+   "fieldtype": "Link",
+   "label": "Source Acquisition",
+   "options": "Land Acquisition",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "block",
+   "fieldtype": "Data",
+   "label": "Block"
+  },
+  {
+   "fieldname": "plot_number",
+   "fieldtype": "Int",
+   "label": "Plot Number"
+  },
+  {
+   "fieldname": "size_sqm",
+   "fieldtype": "Float",
+   "label": "Size (sqm)"
+  },
+  {
+   "fieldname": "is_corner_piece",
+   "fieldtype": "Check",
+   "label": "Is Corner Piece"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Available\nReserved\nAllocated\nSold\nResold\nRefunded",
+   "default": "Available",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "current_subscriber",
+   "fieldtype": "Link",
+   "label": "Current Subscriber",
+   "options": "Customer",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "plot_subscription",
+   "fieldtype": "Link",
+   "label": "Plot Subscription",
+   "options": "Plot Subscription"
+  },
+  {
+   "fieldname": "sold_as",
+   "fieldtype": "Select",
+   "label": "Sold As",
+   "options": "\nPlot\nPart of Acre\nPart of 5 Acres\nPart of 10 Acres"
+  }
+ ],
+ "links": [],
+ "modified": "2026-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Agrolocale",
+ "name": "Land Plot",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "index_web_pages_for_search": 1,
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "write": 1
+  }
+ ],
+ "track_changes": 1,
+ "autoname": "naming_series:",
+ "search_fields": [
+  "estate",
+  "status",
+  "current_subscriber"
+ ]
+}

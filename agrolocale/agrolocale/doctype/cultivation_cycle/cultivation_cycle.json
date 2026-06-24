@@ -1,0 +1,154 @@
+{
+ "actions": [],
+ "creation": "2026-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "batch_name",
+  "crop",
+  "season",
+  "cb1",
+  "status",
+  "company_share_pct",
+  "sb1",
+  "cultivation_start",
+  "harvest_start",
+  "harvest_end",
+  "sb2",
+  "capacity_plots",
+  "capacity_acres",
+  "cb2",
+  "subscribed_plots",
+  "subscribed_acres"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "CYC-.YYYY.-",
+   "default": "CYC-.YYYY.-"
+  },
+  {
+   "fieldname": "batch_name",
+   "fieldtype": "Data",
+   "label": "Batch Name",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "crop",
+   "fieldtype": "Link",
+   "label": "Crop",
+   "options": "Crop",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "season",
+   "fieldtype": "Data",
+   "label": "Season",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Open\nCultivating\nHarvesting\nSettled\nClosed",
+   "default": "Open",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "company_share_pct",
+   "fieldtype": "Percent",
+   "label": "Company Share %",
+   "default": "20",
+   "fetch_from": "crop.company_share_pct"
+  },
+  {
+   "fieldname": "sb1",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "cultivation_start",
+   "fieldtype": "Date",
+   "label": "Cultivation Start"
+  },
+  {
+   "fieldname": "harvest_start",
+   "fieldtype": "Date",
+   "label": "Harvest Start"
+  },
+  {
+   "fieldname": "harvest_end",
+   "fieldtype": "Date",
+   "label": "Harvest End"
+  },
+  {
+   "fieldname": "sb2",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "capacity_plots",
+   "fieldtype": "Float",
+   "label": "Capacity (Plots)"
+  },
+  {
+   "fieldname": "capacity_acres",
+   "fieldtype": "Float",
+   "label": "Capacity (Acres)"
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "subscribed_plots",
+   "fieldtype": "Float",
+   "label": "Subscribed (Plots)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "subscribed_acres",
+   "fieldtype": "Float",
+   "label": "Subscribed (Acres)",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Agrolocale",
+ "name": "Cultivation Cycle",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "write": 1
+  }
+ ],
+ "track_changes": 1,
+ "autoname": "naming_series:",
+ "title_field": "batch_name"
+}

@@ -1,0 +1,86 @@
+{
+ "actions": [],
+ "creation": "2026-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "estate",
+  "unit_type",
+  "payment_plan",
+  "price",
+  "developmental_fee",
+  "legal_documentation_fee"
+ ],
+ "fields": [
+  {
+   "fieldname": "estate",
+   "fieldtype": "Link",
+   "label": "Estate",
+   "options": "Farm Estate",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "unit_type",
+   "fieldtype": "Select",
+   "label": "Unit Type",
+   "options": "Plot\nAcre\n5 Acres\n10 Acres\nHectare",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "payment_plan",
+   "fieldtype": "Select",
+   "label": "Payment Plan",
+   "options": "Outright (0-3M)\n4-6M\n7-12M",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "price",
+   "fieldtype": "Currency",
+   "label": "Price",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "developmental_fee",
+   "fieldtype": "Currency",
+   "label": "Developmental Fee"
+  },
+  {
+   "fieldname": "legal_documentation_fee",
+   "fieldtype": "Currency",
+   "label": "Legal Documentation Fee"
+  }
+ ],
+ "links": [],
+ "modified": "2026-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Agrolocale",
+ "name": "Estate Price Band",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "index_web_pages_for_search": 1,
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "write": 1
+  }
+ ],
+ "track_changes": 1,
+ "autoname": "format:PB-{estate}-{unit_type}-{payment_plan}"
+}

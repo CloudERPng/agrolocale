@@ -1,0 +1,106 @@
+{
+ "actions": [],
+ "creation": "2026-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "estate_name",
+  "location",
+  "title_status",
+  "developer",
+  "landmarks",
+  "cb1",
+  "default_plot_size_sqm",
+  "plots_per_hectare",
+  "plots_per_acre",
+  "total_hectares"
+ ],
+ "fields": [
+  {
+   "fieldname": "estate_name",
+   "fieldtype": "Data",
+   "label": "Estate Name",
+   "reqd": 1,
+   "in_list_view": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Data",
+   "label": "Location",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "title_status",
+   "fieldtype": "Select",
+   "label": "Title Status",
+   "options": "C of O In View\nRegistered Survey\nProvisional Survey"
+  },
+  {
+   "fieldname": "developer",
+   "fieldtype": "Data",
+   "label": "Developer",
+   "default": "Agrolocale Investment Ltd"
+  },
+  {
+   "fieldname": "landmarks",
+   "fieldtype": "Small Text",
+   "label": "Landmarks"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_plot_size_sqm",
+   "fieldtype": "Float",
+   "label": "Default Plot Size (sqm)"
+  },
+  {
+   "fieldname": "plots_per_hectare",
+   "fieldtype": "Float",
+   "label": "Plots per Hectare (acquisition)"
+  },
+  {
+   "fieldname": "plots_per_acre",
+   "fieldtype": "Float",
+   "label": "Plots per Acre (sale conversion)"
+  },
+  {
+   "fieldname": "total_hectares",
+   "fieldtype": "Float",
+   "label": "Total Hectares (rollup)",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Agrolocale",
+ "name": "Farm Estate",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "index_web_pages_for_search": 1,
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "write": 1
+  }
+ ],
+ "track_changes": 1,
+ "autoname": "field:estate_name",
+ "title_field": "estate_name"
+}

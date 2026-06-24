@@ -1,0 +1,127 @@
+{
+ "actions": [],
+ "creation": "2026-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "crop_name",
+  "cultivation_type",
+  "sb1",
+  "setup_fee_per_plot",
+  "setup_fee_per_acre",
+  "cb1",
+  "expected_yield_per_plot_kg",
+  "expected_yield_per_acre_kg",
+  "sb2",
+  "min_price_per_kg",
+  "max_price_per_kg",
+  "cb2",
+  "company_share_pct",
+  "subscriber_share_pct"
+ ],
+ "fields": [
+  {
+   "fieldname": "crop_name",
+   "fieldtype": "Data",
+   "label": "Crop Name",
+   "reqd": 1,
+   "in_list_view": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "cultivation_type",
+   "fieldtype": "Select",
+   "label": "Cultivation Type",
+   "options": "Open Field\nGreen House",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "sb1",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "setup_fee_per_plot",
+   "fieldtype": "Currency",
+   "label": "Setup Fee Per Plot"
+  },
+  {
+   "fieldname": "setup_fee_per_acre",
+   "fieldtype": "Currency",
+   "label": "Setup Fee Per Acre"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "expected_yield_per_plot_kg",
+   "fieldtype": "Float",
+   "label": "Expected Yield per Plot (kg)"
+  },
+  {
+   "fieldname": "expected_yield_per_acre_kg",
+   "fieldtype": "Float",
+   "label": "Expected Yield per Acre (kg)"
+  },
+  {
+   "fieldname": "sb2",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "min_price_per_kg",
+   "fieldtype": "Currency",
+   "label": "Min Price per kg"
+  },
+  {
+   "fieldname": "max_price_per_kg",
+   "fieldtype": "Currency",
+   "label": "Max Price per kg"
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "company_share_pct",
+   "fieldtype": "Percent",
+   "label": "Company Share %",
+   "default": "20"
+  },
+  {
+   "fieldname": "subscriber_share_pct",
+   "fieldtype": "Percent",
+   "label": "Subscriber Share %",
+   "default": "80"
+  }
+ ],
+ "links": [],
+ "modified": "2026-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Agrolocale",
+ "name": "Crop",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "index_web_pages_for_search": 1,
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "write": 1
+  }
+ ],
+ "track_changes": 1,
+ "autoname": "field:crop_name",
+ "title_field": "crop_name"
+}

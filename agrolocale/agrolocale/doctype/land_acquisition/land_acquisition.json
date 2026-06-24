@@ -1,0 +1,128 @@
+{
+ "actions": [],
+ "creation": "2026-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "estate",
+  "acquisition_date",
+  "vendor",
+  "cb1",
+  "hectares_acquired",
+  "plots_per_hectare",
+  "number_of_plots",
+  "plot_size_sqm",
+  "sb1",
+  "total_acquisition_cost",
+  "cost_per_plot",
+  "plots_generated"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "LAND-ACQ-.YYYY.-",
+   "default": "LAND-ACQ-.YYYY.-"
+  },
+  {
+   "fieldname": "estate",
+   "fieldtype": "Link",
+   "label": "Estate",
+   "options": "Farm Estate",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "acquisition_date",
+   "fieldtype": "Date",
+   "label": "Acquisition Date",
+   "reqd": 1,
+   "default": "Today"
+  },
+  {
+   "fieldname": "vendor",
+   "fieldtype": "Link",
+   "label": "Vendor",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hectares_acquired",
+   "fieldtype": "Float",
+   "label": "Hectares Acquired"
+  },
+  {
+   "fieldname": "plots_per_hectare",
+   "fieldtype": "Float",
+   "label": "Plots per Hectare",
+   "fetch_from": "estate.plots_per_hectare"
+  },
+  {
+   "fieldname": "number_of_plots",
+   "fieldtype": "Int",
+   "label": "Number of Plots"
+  },
+  {
+   "fieldname": "plot_size_sqm",
+   "fieldtype": "Float",
+   "label": "Plot Size (sqm)",
+   "fetch_from": "estate.default_plot_size_sqm"
+  },
+  {
+   "fieldname": "sb1",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "total_acquisition_cost",
+   "fieldtype": "Currency",
+   "label": "Total Acquisition Cost"
+  },
+  {
+   "fieldname": "cost_per_plot",
+   "fieldtype": "Currency",
+   "label": "Cost per Plot",
+   "read_only": 1
+  },
+  {
+   "fieldname": "plots_generated",
+   "fieldtype": "Check",
+   "label": "Plots Generated",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Agrolocale",
+ "name": "Land Acquisition",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "write": 1
+  }
+ ],
+ "track_changes": 1,
+ "autoname": "naming_series:"
+}
