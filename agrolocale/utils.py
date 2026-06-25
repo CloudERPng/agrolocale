@@ -17,5 +17,6 @@ def ensure_item(item_name):
         "stock_uom": uom,
         "is_stock_item": 0,
         "is_sales_item": 1,
+        "is_purchase_item": 1,
     }).insert(ignore_permissions=True)
     return doc.name

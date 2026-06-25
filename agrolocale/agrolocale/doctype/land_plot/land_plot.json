@@ -121,9 +121,5 @@
  ],
  "track_changes": 1,
  "autoname": "naming_series:",
- "search_fields": [
-  "estate",
-  "status",
-  "current_subscriber"
- ]
+ "search_fields": "estate,status,current_subscriber"
 }

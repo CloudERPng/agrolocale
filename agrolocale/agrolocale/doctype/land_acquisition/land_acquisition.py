@@ -1,6 +1,6 @@
 import frappe
 from frappe.model.document import Document
-from frappe.utils import flt, cint, getdate, add_days, nowdate
+from frappe.utils import flt, cint
 from agrolocale.utils import ensure_item
 
 
@@ -23,4 +23,29 @@ class LandAcquisition(Document):
             }).insert(ignore_permissions=True)
         self.db_set("cost_per_plot", unit_cost)
         self.db_set("plots_generated", 1)
+        self.create_purchase_invoice()
         frappe.msgprint(f"{count} plots generated for {self.estate}.")
+
+    def create_purchase_invoice(self):
+        """Create a draft Purchase Invoice to the vendor for the land cost.
+        Wrapped so a failure here never blocks plot generation."""
+        if self.purchase_invoice or not self.vendor or flt(self.total_acquisition_cost) <= 0:
+            return
+        try:
+            pi = frappe.get_doc({
+                "doctype": "Purchase Invoice",
+                "supplier": self.vendor,
+                "items": [{
+                    "item_code": ensure_item(f"Land Acquisition - {self.estate}"),
+                    "qty": 1,
+                    "rate": flt(self.total_acquisition_cost),
+                }],
+            })
+            pi.insert(ignore_permissions=True)
+            self.db_set("purchase_invoice", pi.name)
+            frappe.msgprint(f"Draft Purchase Invoice {pi.name} created for {self.vendor}.")
+        except Exception:
+            frappe.log_error(frappe.get_traceback(), "Agrolocale: Purchase Invoice creation failed")
+            frappe.msgprint("Plots were generated, but the Purchase Invoice could not be created "
+                            "automatically. Create it manually or check the vendor / accounts setup.",
+                            indicator="orange")

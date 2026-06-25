@@ -9,6 +9,7 @@ required_apps = ["erpnext"]
 doc_events = {
     "Payment Entry": {
         "on_submit": "agrolocale.events.payment_entry_on_submit",
+        "on_cancel": "agrolocale.events.payment_entry_on_cancel",
     }
 }
 

@@ -16,7 +16,8 @@
   "sb1",
   "total_acquisition_cost",
   "cost_per_plot",
-  "plots_generated"
+  "plots_generated",
+  "purchase_invoice"
  ],
  "fields": [
   {
@@ -92,6 +93,13 @@
    "fieldname": "plots_generated",
    "fieldtype": "Check",
    "label": "Plots Generated",
+   "read_only": 1
+  },
+  {
+   "fieldname": "purchase_invoice",
+   "fieldtype": "Link",
+   "label": "Purchase Invoice",
+   "options": "Purchase Invoice",
    "read_only": 1
   }
  ],

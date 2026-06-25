@@ -26,7 +26,8 @@
   "payment_schedule",
   "sb4",
   "allocated_plots",
-  "sales_order"
+  "sales_order",
+  "sales_invoice"
  ],
  "fields": [
   {
@@ -161,6 +162,13 @@
    "fieldtype": "Link",
    "label": "Sales Order",
    "options": "Sales Order",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "label": "Sales Invoice",
+   "options": "Sales Invoice",
    "read_only": 1
   }
  ],

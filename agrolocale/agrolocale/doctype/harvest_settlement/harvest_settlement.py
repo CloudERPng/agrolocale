@@ -1,7 +1,6 @@
 import frappe
 from frappe.model.document import Document
-from frappe.utils import flt, cint, getdate, add_days, nowdate
-from agrolocale.utils import ensure_item
+from frappe.utils import flt
 
 
 class HarvestSettlement(Document):
@@ -19,5 +18,30 @@ class HarvestSettlement(Document):
 
     def on_submit(self):
         # Accounting accounts are site-specific (see README "Harvest posting").
-        # Figures are computed in validate(); enable post_settlement() after mapping accounts.
+        # Figures are computed in validate(); enable posting after mapping accounts.
         frappe.msgprint("Harvest computed. Configure GL accounts to auto-post the 80/20 payouts (see README).")
+
+
+@frappe.whitelist()
+def get_cycle_subscribers(cultivation_cycle, actual_total_yield_kg=0):
+    """Return the subscribers enrolled in a cycle, with a suggested yield share.
+    If an actual total yield is given, it is split by each subscriber's expected
+    yield weight; otherwise each subscriber's own expected yield is used."""
+    subs = frappe.get_all("Cultivation Subscription",
+        filters={"cultivation_cycle": cultivation_cycle, "docstatus": 1,
+                 "status": ["in", ["Subscribed", "Cultivating", "Harvested"]]},
+        fields=["name", "subscriber", "expected_yield_kg"])
+    total_expected = sum(flt(s.expected_yield_kg) for s in subs)
+    actual = flt(actual_total_yield_kg)
+    out = []
+    for s in subs:
+        if actual and total_expected:
+            y = actual * flt(s.expected_yield_kg) / total_expected
+        else:
+            y = flt(s.expected_yield_kg)
+        out.append({
+            "subscriber": s.subscriber,
+            "cultivation_subscription": s.name,
+            "yield_kg": y,
+        })
+    return out
