@@ -33,6 +33,8 @@ class PlotSubscription(Document):
             self.append("payment_schedule", {
                 "due_date": add_months(start, i),
                 "amount": amt,
+                "amount_paid": 0,
+                "outstanding": amt,
                 "status": "Pending",
             })
 

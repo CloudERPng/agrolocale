@@ -141,7 +141,9 @@
   },
   {
    "fieldname": "sb3",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Payment Schedule",
+   "collapsible": 0
   },
   {
    "fieldname": "number_of_installments",
@@ -162,9 +164,9 @@
   {
    "fieldname": "payment_schedule",
    "fieldtype": "Table",
-   "label": "Payment Schedule",
+   "label": "Installments",
    "options": "Land Payment Schedule",
-   "description": "Generated from the payment plan on save. Statuses update automatically as payments are received."
+   "description": "Generated from the payment plan when you save. Amount Paid, Outstanding and Status update automatically as payments are received."
   },
   {
    "fieldname": "sb4",

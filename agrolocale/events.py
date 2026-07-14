@@ -44,17 +44,26 @@ def recompute_subscription(sub_name):
     rows = frappe.get_all("Land Payment Schedule",
         filters={"parent": sub_name, "parenttype": "Plot Subscription"},
         fields=["name", "due_date", "amount"], order_by="idx asc")
+    # Cascade the paid amount down the rows: a row can be fully covered (Paid),
+    # partially covered (Partly Paid), or untouched (Pending / Overdue if past due).
     remaining = paid
     for r in rows:
         amt = flt(r.amount)
-        if amt > 0 and remaining >= amt:
-            status = "Paid"
-            remaining -= amt
+        applied = min(amt, max(remaining, 0))
+        remaining = flt(remaining - applied, 2)
+        outstanding = flt(amt - applied, 2)
+        if amt <= 0 or outstanding <= 0.005:
+            status, outstanding, applied = "Paid", 0, amt
+        elif applied > 0.005:
+            status = "Partly Paid"
         elif r.due_date and getdate(r.due_date) < today:
             status = "Overdue"
         else:
             status = "Pending"
-        frappe.db.set_value("Land Payment Schedule", r.name, "status", status)
+        frappe.db.set_value("Land Payment Schedule", r.name, {
+            "amount_paid": flt(applied, 2),
+            "outstanding": outstanding,
+            "status": status})
 
     fully_paid = bool(total and paid >= total)
 
