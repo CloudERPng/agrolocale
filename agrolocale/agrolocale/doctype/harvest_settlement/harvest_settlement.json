@@ -15,7 +15,10 @@
   "company_share",
   "subscriber_pool",
   "sb2",
-  "allocations"
+  "allocations",
+  "sb3",
+  "revenue_journal_entry",
+  "payout_journal_entry"
  ],
  "fields": [
   {
@@ -84,6 +87,24 @@
    "fieldtype": "Table",
    "label": "Allocations",
    "options": "Harvest Allocation"
+  },
+  {
+   "fieldname": "sb3",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "revenue_journal_entry",
+   "fieldtype": "Link",
+   "label": "Revenue Journal Entry",
+   "options": "Journal Entry",
+   "read_only": 1
+  },
+  {
+   "fieldname": "payout_journal_entry",
+   "fieldtype": "Link",
+   "label": "Payout Journal Entry",
+   "options": "Journal Entry",
+   "read_only": 1
   }
  ],
  "links": [],

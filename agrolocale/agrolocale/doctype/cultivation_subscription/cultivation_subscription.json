@@ -19,7 +19,9 @@
   "cb2",
   "projected_revenue_min",
   "projected_revenue_max",
-  "setup_invoice"
+  "setup_invoice",
+  "applied_credit",
+  "credit_journal_entry"
  ],
  "fields": [
   {
@@ -121,6 +123,21 @@
    "label": "Setup Invoice",
    "options": "Sales Invoice",
    "read_only": 1
+  },
+  {
+   "fieldname": "applied_credit",
+   "fieldtype": "Currency",
+   "label": "Harvest Credit Applied",
+   "read_only": 1,
+   "allow_on_submit": 1
+  },
+  {
+   "fieldname": "credit_journal_entry",
+   "fieldtype": "Link",
+   "label": "Credit Journal Entry",
+   "options": "Journal Entry",
+   "read_only": 1,
+   "allow_on_submit": 1
   }
  ],
  "links": [],

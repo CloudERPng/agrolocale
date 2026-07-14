@@ -1,0 +1,130 @@
+{
+ "actions": [],
+ "creation": "2026-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "is_submittable": 1,
+ "autoname": "naming_series:",
+ "title_field": "subscriber",
+ "field_order": [
+  "naming_series",
+  "subscriber",
+  "source_settlement",
+  "credit_date",
+  "cb1",
+  "amount",
+  "redeemed_amount",
+  "balance",
+  "status",
+  "sb1",
+  "redemptions"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "CRED-.YYYY.-",
+   "default": "CRED-.YYYY.-"
+  },
+  {
+   "fieldname": "subscriber",
+   "fieldtype": "Link",
+   "label": "Subscriber",
+   "options": "Customer",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "source_settlement",
+   "fieldtype": "Link",
+   "label": "Source Harvest Settlement",
+   "options": "Harvest Settlement",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "credit_date",
+   "fieldtype": "Date",
+   "label": "Credit Date",
+   "default": "Today"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "Credit Amount",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "redeemed_amount",
+   "fieldtype": "Currency",
+   "label": "Redeemed",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "balance",
+   "fieldtype": "Currency",
+   "label": "Balance",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Available\nPartially Redeemed\nRedeemed",
+   "default": "Available",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "sb1",
+   "fieldtype": "Section Break",
+   "label": "Redemptions"
+  },
+  {
+   "fieldname": "redemptions",
+   "fieldtype": "Table",
+   "label": "Redemptions",
+   "options": "Credit Redemption",
+   "read_only": 1,
+   "allow_on_submit": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Agrolocale",
+ "name": "Cultivation Credit",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

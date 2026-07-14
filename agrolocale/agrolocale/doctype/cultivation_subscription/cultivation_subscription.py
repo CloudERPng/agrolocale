@@ -64,3 +64,95 @@ class CultivationSubscription(Document):
         cyc.db_set("subscribed_plots", flt(cyc.subscribed_plots) + flt(self.number_of_plots))
         cyc.db_set("subscribed_acres", flt(cyc.subscribed_acres) + flt(self.number_of_acres))
         frappe.msgprint(f"Setup invoice {si.name} created as draft for review.")
+
+    @frappe.whitelist()
+    def get_available_credit(self):
+        rows = frappe.get_all("Cultivation Credit",
+            filters={"subscriber": self.subscriber, "docstatus": 1,
+                     "status": ["in", ["Available", "Partially Redeemed"]]},
+            fields=["name", "balance"], order_by="credit_date asc, name asc")
+        return {"total": flt(sum(flt(r.balance) for r in rows), 2), "credits": rows}
+
+    @frappe.whitelist()
+    def apply_harvest_credit(self, amount=None):
+        """Redeem the subscriber's harvest rollover credits (oldest first) against
+        this subscription's setup invoice. Posts Dr Subscriber Harvest Payable /
+        Cr Debtors referencing the invoice, so the invoice outstanding falls and
+        the payable clears."""
+        from agrolocale.agrolocale.doctype.harvest_settlement.harvest_settlement import get_settings
+        from frappe.utils import nowdate
+
+        if self.docstatus != 1:
+            frappe.throw("Submit the Cultivation Subscription first.")
+        if not self.setup_invoice:
+            frappe.throw("No setup invoice is linked to this subscription.")
+        inv = frappe.db.get_value("Sales Invoice", self.setup_invoice,
+            ["docstatus", "outstanding_amount", "customer", "debit_to", "company"], as_dict=True)
+        if inv.docstatus == 0:
+            frappe.throw("Submit the setup invoice first — credit is applied against a "
+                         "submitted invoice.")
+        if inv.docstatus == 2:
+            frappe.throw("The setup invoice has been cancelled.")
+        outstanding = flt(inv.outstanding_amount)
+        if outstanding <= 0:
+            frappe.msgprint("The setup invoice is already fully paid.")
+            return
+
+        info = self.get_available_credit()
+        available = flt(info["total"])
+        if available <= 0:
+            frappe.throw(f"{self.subscriber} has no available harvest credit.")
+
+        to_apply = min(outstanding, available, flt(amount) if amount else available)
+        to_apply = flt(to_apply, 2)
+        if to_apply <= 0:
+            return
+
+        s = get_settings()
+        payable = (s or {}).get("subscriber_harvest_payable_account")
+        if not payable:
+            frappe.throw("Set the Subscriber Harvest Payable Account in Agrolocale Settings first.")
+
+        je = frappe.get_doc({
+            "doctype": "Journal Entry", "voucher_type": "Journal Entry",
+            "posting_date": nowdate(), "company": s.get("company") or inv.company,
+            "user_remark": f"Harvest credit applied to setup invoice {self.setup_invoice} "
+                           f"for {self.subscriber}",
+            "accounts": [
+                {"account": payable, "party_type": "Customer", "party": self.subscriber,
+                 "debit_in_account_currency": to_apply},
+                {"account": inv.debit_to, "party_type": "Customer", "party": self.subscriber,
+                 "credit_in_account_currency": to_apply,
+                 "reference_type": "Sales Invoice", "reference_name": self.setup_invoice},
+            ],
+        })
+        je.insert(ignore_permissions=True)
+        je.submit()
+
+        # Consume credits oldest-first
+        remaining = to_apply
+        for r in info["credits"]:
+            if remaining <= 0:
+                break
+            take = min(flt(r.balance), remaining)
+            cr = frappe.get_doc("Cultivation Credit", r.name)
+            cr.append("redemptions", {
+                "redemption_date": nowdate(), "amount": flt(take, 2),
+                "cultivation_subscription": self.name,
+                "sales_invoice": self.setup_invoice, "journal_entry": je.name,
+            })
+            cr.redeemed_amount = flt(flt(cr.redeemed_amount) + take, 2)
+            cr.balance = flt(flt(cr.amount) - cr.redeemed_amount, 2)
+            cr.status = ("Redeemed" if cr.balance <= 0.005
+                         else "Partially Redeemed")
+            cr.flags.ignore_validate_update_after_submit = True
+            cr.save(ignore_permissions=True)
+            remaining = flt(remaining - take, 2)
+
+        self.db_set("applied_credit", flt(flt(self.applied_credit) + to_apply, 2))
+        self.db_set("credit_journal_entry", je.name)
+        frappe.msgprint(f"Applied {to_apply:,.2f} of harvest credit to {self.setup_invoice} "
+                        f"(Journal Entry {je.name}).", indicator="green",
+                        title="Credit applied")
+        return je.name
+

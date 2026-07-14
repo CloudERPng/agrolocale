@@ -7,9 +7,12 @@
   "subscriber",
   "cultivation_subscription",
   "yield_kg",
+  "share_pct",
   "gross",
   "company_cut",
   "subscriber_payout",
+  "paid_amount",
+  "rollover_amount",
   "payout_status"
  ],
  "fields": [
@@ -34,6 +37,13 @@
    "in_list_view": 1
   },
   {
+   "fieldname": "share_pct",
+   "fieldtype": "Percent",
+   "label": "Share %",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
    "fieldname": "gross",
    "fieldtype": "Currency",
    "label": "Gross",
@@ -55,11 +65,28 @@
    "in_list_view": 1
   },
   {
+   "fieldname": "paid_amount",
+   "fieldtype": "Currency",
+   "label": "Paid (cash)",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "rollover_amount",
+   "fieldtype": "Currency",
+   "label": "Rolled Over",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "in_list_view": 1
+  },
+  {
    "fieldname": "payout_status",
    "fieldtype": "Select",
    "label": "Payout Status",
-   "options": "Pending\nPaid",
-   "default": "Pending"
+   "options": "Pending\nPartially Settled\nSettled",
+   "default": "Pending",
+   "allow_on_submit": 1
   }
  ],
  "links": [],

@@ -1,4 +1,13 @@
 frappe.ui.form.on('Plot Subscription', {
+  refresh(frm) {
+    if (frm.doc.docstatus === 0) {
+      frm.add_custom_button('Rebuild Payment Schedule', () => {
+        frappe.confirm('Rebuild the installments from the payment plan? Manual edits will be lost.', () => {
+          frm.call('regenerate_payment_schedule').then(() => frm.refresh());
+        });
+      });
+    }
+  },
   payment_plan: refresh_all,
   estate: refresh_all,
 });

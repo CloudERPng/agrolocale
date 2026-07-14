@@ -23,6 +23,9 @@
   "legal_documentation_fee",
   "total_contract_value",
   "sb3",
+  "number_of_installments",
+  "cb3",
+  "first_installment_date",
   "payment_schedule",
   "sb4",
   "allocated_plots",
@@ -141,10 +144,27 @@
    "fieldtype": "Section Break"
   },
   {
+   "fieldname": "number_of_installments",
+   "fieldtype": "Int",
+   "label": "Number of Installments",
+   "description": "Blank uses the plan default: Outright 3, 4-6M 6, 7-12M 12."
+  },
+  {
+   "fieldname": "cb3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "first_installment_date",
+   "fieldtype": "Date",
+   "label": "First Installment Date",
+   "description": "Defaults to the posting date."
+  },
+  {
    "fieldname": "payment_schedule",
    "fieldtype": "Table",
    "label": "Payment Schedule",
-   "options": "Land Payment Schedule"
+   "options": "Land Payment Schedule",
+   "description": "Generated from the payment plan on save. Statuses update automatically as payments are received."
   },
   {
    "fieldname": "sb4",

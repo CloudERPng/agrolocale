@@ -1,14 +1,50 @@
 import frappe
 from frappe.model.document import Document
-from frappe.utils import flt, cint, getdate, add_days, nowdate
+from frappe.utils import flt, cint, getdate, add_days, add_months, nowdate
 from agrolocale.utils import ensure_item
 
 
 class PlotSubscription(Document):
+    PLAN_MONTHS = {"Outright (0-3M)": 3, "4-6M": 6, "7-12M": 12}
+
     def validate(self):
         if not self.sold_units:
             frappe.throw("Add at least one row in Sold Units.")
         self.compute_totals()
+        if not self.payment_schedule:
+            self.build_payment_schedule()
+
+    def default_installments(self):
+        return cint(self.number_of_installments) or self.PLAN_MONTHS.get(self.payment_plan, 1)
+
+    def build_payment_schedule(self):
+        """Spread the contract value over equal monthly installments per the payment plan."""
+        total = flt(self.total_contract_value)
+        if total <= 0:
+            return
+        n = max(1, self.default_installments())
+        start = getdate(self.first_installment_date or self.posting_date or nowdate())
+        self.set("payment_schedule", [])
+        per = flt(total / n, 2)
+        running = 0.0
+        for i in range(n):
+            amt = per if i < n - 1 else flt(total - running, 2)
+            running += amt
+            self.append("payment_schedule", {
+                "due_date": add_months(start, i),
+                "amount": amt,
+                "status": "Pending",
+            })
+
+    @frappe.whitelist()
+    def regenerate_payment_schedule(self):
+        """Rebuild the installment rows, discarding manual edits."""
+        if self.docstatus != 0:
+            frappe.throw("The schedule can only be rebuilt while the subscription is a draft.")
+        self.compute_totals()
+        self.build_payment_schedule()
+        self.save()
+        return True
 
     def compute_totals(self):
         ppa = flt(frappe.db.get_value("Farm Estate", self.estate, "plots_per_acre")) or 1

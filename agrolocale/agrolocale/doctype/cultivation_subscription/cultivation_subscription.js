@@ -1,4 +1,29 @@
 frappe.ui.form.on('Cultivation Subscription', {
+  refresh(frm) {
+    if (frm.doc.docstatus === 1 && frm.doc.setup_invoice) {
+      frm.call('get_available_credit').then((r) => {
+        const total = (r.message && r.message.total) || 0;
+        if (total > 0) {
+          frm.add_custom_button(`Apply Harvest Credit (${format_currency(total)})`, () => {
+            const d = new frappe.ui.Dialog({
+              title: 'Apply Harvest Credit',
+              fields: [
+                { fieldtype: 'Currency', fieldname: 'amount', label: 'Amount to apply',
+                  default: total,
+                  description: 'Capped at the invoice outstanding and the available credit. Oldest credits are used first.' },
+              ],
+              primary_action_label: 'Apply',
+              primary_action(v) {
+                d.hide();
+                frm.call('apply_harvest_credit', { amount: v.amount }).then(() => frm.refresh());
+              },
+            });
+            d.show();
+          }).addClass('btn-primary');
+        }
+      });
+    }
+  },
   subscriber(frm) {
     frm.set_query('eligibility_subscription', () => ({
       filters: { subscriber: frm.doc.subscriber, subscription_status: 'Allocated' }

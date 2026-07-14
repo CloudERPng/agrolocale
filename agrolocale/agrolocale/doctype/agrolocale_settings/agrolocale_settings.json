@@ -1,0 +1,81 @@
+{
+ "actions": [],
+ "creation": "2026-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "issingle": 1,
+ "field_order": [
+  "company",
+  "auto_post_harvest_revenue",
+  "sb2",
+  "harvest_proceeds_account",
+  "subscriber_harvest_payable_account",
+  "cultivation_commission_income_account"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "auto_post_harvest_revenue",
+   "fieldtype": "Check",
+   "label": "Auto-post harvest revenue on submit",
+   "default": "1",
+   "description": "Post the harvest recognition entry automatically when a Harvest Settlement is submitted."
+  },
+  {
+   "fieldname": "sb2",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "harvest_proceeds_account",
+   "fieldtype": "Link",
+   "label": "Harvest Proceeds Account (Bank/Cash)",
+   "options": "Account",
+   "description": "Debited with harvest sale proceeds; credited when subscribers are paid."
+  },
+  {
+   "fieldname": "subscriber_harvest_payable_account",
+   "fieldtype": "Link",
+   "label": "Subscriber Harvest Payable Account",
+   "options": "Account",
+   "description": "Liability account holding the subscribers' 80% until paid out."
+  },
+  {
+   "fieldname": "cultivation_commission_income_account",
+   "fieldtype": "Link",
+   "label": "Cultivation Commission Income Account",
+   "options": "Account",
+   "description": "Income account for Agrolocale's 20% share of harvest value."
+  }
+ ],
+ "links": [],
+ "modified": "2026-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Agrolocale",
+ "name": "Agrolocale Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
