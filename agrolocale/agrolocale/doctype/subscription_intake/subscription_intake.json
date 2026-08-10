@@ -1,0 +1,322 @@
+{
+ "actions": [],
+ "creation": "2026-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "status",
+  "source_lead",
+  "cb0",
+  "realtor",
+  "realtor_group",
+  "sb1",
+  "existing_customer",
+  "full_name",
+  "cb1",
+  "mobile",
+  "email",
+  "sb2",
+  "estate",
+  "payment_plan",
+  "sold_units",
+  "sb_fees",
+  "land_value",
+  "developmental_fee",
+  "cb_fee",
+  "legal_documentation_fee",
+  "total_plot_count",
+  "total_contract_value",
+  "sb3",
+  "subscription_form",
+  "faq_signed",
+  "cb3",
+  "id_document",
+  "passport_photo",
+  "sb4",
+  "receipts",
+  "sb5",
+  "customer_care_notes",
+  "return_reason",
+  "cb5",
+  "accounts_notes",
+  "sb6",
+  "customer",
+  "plot_subscription"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "SUBIN-.YYYY.-",
+   "default": "SUBIN-.YYYY.-"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nWith Customer Care\nWith Accounts\nProcessed\nReturned to Sales",
+   "read_only": 1,
+   "default": "Draft",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "source_lead",
+   "fieldtype": "Link",
+   "label": "Source Lead",
+   "options": "Sales Lead"
+  },
+  {
+   "fieldname": "cb0",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "realtor",
+   "fieldtype": "Data",
+   "label": "Realtor"
+  },
+  {
+   "fieldname": "realtor_group",
+   "fieldtype": "Data",
+   "label": "Realtor Group"
+  },
+  {
+   "fieldname": "sb1",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "existing_customer",
+   "fieldtype": "Link",
+   "label": "Existing Customer",
+   "options": "Customer",
+   "description": "Leave blank for a new subscriber and fill the details below."
+  },
+  {
+   "fieldname": "full_name",
+   "fieldtype": "Data",
+   "label": "Full Name (as on title documents)",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mobile",
+   "fieldtype": "Data",
+   "label": "Mobile"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email"
+  },
+  {
+   "fieldname": "sb2",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "estate",
+   "fieldtype": "Link",
+   "label": "Estate",
+   "options": "Farm Estate",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "payment_plan",
+   "fieldtype": "Select",
+   "label": "Payment Plan",
+   "options": "Outright (0-3M)\n4-6M\n7-12M",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sold_units",
+   "fieldtype": "Table",
+   "label": "Units",
+   "options": "Sold Units"
+  },
+  {
+   "fieldname": "sb_fees",
+   "fieldtype": "Section Break",
+   "label": "Pricing (from Estate Price Band)"
+  },
+  {
+   "fieldname": "land_value",
+   "fieldtype": "Currency",
+   "label": "Land Value",
+   "read_only": 1
+  },
+  {
+   "fieldname": "developmental_fee",
+   "fieldtype": "Currency",
+   "label": "Developmental Fee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_fee",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "legal_documentation_fee",
+   "fieldtype": "Currency",
+   "label": "Legal Documentation Fee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_plot_count",
+   "fieldtype": "Int",
+   "label": "Total Plot Count",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_contract_value",
+   "fieldtype": "Currency",
+   "label": "Total Contract Value",
+   "read_only": 1,
+   "description": "Check this against the client's signed paperwork before sending to Accounts."
+  },
+  {
+   "fieldname": "sb3",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "subscription_form",
+   "fieldtype": "Attach",
+   "label": "Subscription Form (scan)"
+  },
+  {
+   "fieldname": "faq_signed",
+   "fieldtype": "Attach",
+   "label": "Signed FAQ"
+  },
+  {
+   "fieldname": "cb3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "id_document",
+   "fieldtype": "Attach",
+   "label": "Means of Identification"
+  },
+  {
+   "fieldname": "passport_photo",
+   "fieldtype": "Attach",
+   "label": "Passport Photo"
+  },
+  {
+   "fieldname": "sb4",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "receipts",
+   "fieldtype": "Table",
+   "label": "Receipts",
+   "options": "Intake Receipt"
+  },
+  {
+   "fieldname": "sb5",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "customer_care_notes",
+   "fieldtype": "Small Text",
+   "label": "Customer Care Notes"
+  },
+  {
+   "fieldname": "return_reason",
+   "fieldtype": "Small Text",
+   "label": "Return Reason",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "accounts_notes",
+   "fieldtype": "Small Text",
+   "label": "Accounts Notes"
+  },
+  {
+   "fieldname": "sb6",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer (created)",
+   "options": "Customer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "plot_subscription",
+   "fieldtype": "Link",
+   "label": "Plot Subscription",
+   "options": "Plot Subscription",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Agrolocale",
+ "name": "Subscription Intake",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "write": 1
+  },
+  {
+   "role": "Agrolocale Sales",
+   "read": 1,
+   "email": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "create": 1,
+   "write": 1
+  },
+  {
+   "role": "Agrolocale Customer Care",
+   "read": 1,
+   "email": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "create": 1,
+   "write": 1
+  },
+  {
+   "role": "Agrolocale Accounts",
+   "read": 1,
+   "email": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "track_changes": 1,
+ "autoname": "naming_series:",
+ "title_field": "full_name"
+}

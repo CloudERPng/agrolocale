@@ -26,6 +26,14 @@ function open_settle_dialog(frm) {
       title: 'Settle Payouts',
       size: 'large',
       fields: [
+        { fieldtype: 'Link', fieldname: 'mode_of_payment', label: 'Mode of Payment',
+          options: 'Mode of Payment',
+          description: 'Required if any cash is being paid now.' },
+        { fieldtype: 'Date', fieldname: 'posting_date', label: 'Payment Date',
+          default: frappe.datetime.get_today(), reqd: 1 },
+        { fieldtype: 'Data', fieldname: 'narration', label: 'Narration / Reference',
+          description: 'Recorded as the Reference No on the payment posting.' },
+        { fieldtype: 'Section Break', fieldname: 'sb0' },
         { fieldtype: 'HTML', fieldname: 'intro',
           options: '<p>For each subscriber, enter how much to <b>pay now</b> (cash) and/or ' +
                    '<b>roll over</b> as credit toward a future cultivation cycle. ' +
@@ -52,10 +60,18 @@ function open_settle_dialog(frm) {
         if (!data.length) { frappe.msgprint('Enter a pay-now or rollover amount for at least one subscriber.'); return; }
         const bad = (values.rows || []).find(x => (x.pay_now || 0) + (x.rollover || 0) > (x.outstanding || 0) + 0.005);
         if (bad) { frappe.msgprint(`${bad.subscriber}: total exceeds the outstanding amount.`); return; }
+        const any_cash = data.some(x => (x.pay_now || 0) > 0);
+        if (any_cash && !values.mode_of_payment) {
+          frappe.msgprint('Choose a Mode of Payment for the cash portion.'); return;
+        }
         d.hide();
-        frm.call('settle_payouts', { settlements: data.map(x => ({
-          name: x.name, pay_now: x.pay_now || 0, rollover: x.rollover || 0 })) })
-          .then(() => frm.refresh());
+        frm.call('settle_payouts', {
+          settlements: data.map(x => ({
+            name: x.name, pay_now: x.pay_now || 0, rollover: x.rollover || 0 })),
+          mode_of_payment: values.mode_of_payment,
+          posting_date: values.posting_date,
+          narration: values.narration,
+        }).then(() => frm.refresh());
       },
     });
     d.show();

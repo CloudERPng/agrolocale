@@ -20,3 +20,5 @@ scheduler_events = {
 }
 
 # fixtures = ["Estate Price Band", "Crop"]  # uncomment to ship master data
+
+after_migrate = ["agrolocale.install.after_migrate"]

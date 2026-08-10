@@ -27,6 +27,12 @@
   "cb3",
   "first_installment_date",
   "payment_schedule",
+  "sb_totals",
+  "schedule_total",
+  "cb_t1",
+  "schedule_paid",
+  "cb_t2",
+  "schedule_outstanding",
   "sb4",
   "allocated_plots",
   "sales_order",
@@ -126,12 +132,16 @@
   {
    "fieldname": "developmental_fee",
    "fieldtype": "Currency",
-   "label": "Developmental Fee"
+   "label": "Developmental Fee",
+   "read_only": 1,
+   "description": "From the Estate Price Band."
   },
   {
    "fieldname": "legal_documentation_fee",
    "fieldtype": "Currency",
-   "label": "Legal Documentation Fee"
+   "label": "Legal Documentation Fee",
+   "read_only": 1,
+   "description": "From the Estate Price Band."
   },
   {
    "fieldname": "total_contract_value",
@@ -167,6 +177,40 @@
    "label": "Installments",
    "options": "Land Payment Schedule",
    "description": "Generated from the payment plan when you save. Amount Paid, Outstanding and Status update automatically as payments are received."
+  },
+  {
+   "fieldname": "sb_totals",
+   "fieldtype": "Section Break",
+   "label": "Schedule Totals"
+  },
+  {
+   "fieldname": "schedule_total",
+   "fieldtype": "Currency",
+   "label": "Total Scheduled",
+   "read_only": 1,
+   "allow_on_submit": 1
+  },
+  {
+   "fieldname": "cb_t1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "schedule_paid",
+   "fieldtype": "Currency",
+   "label": "Total Paid",
+   "read_only": 1,
+   "allow_on_submit": 1
+  },
+  {
+   "fieldname": "cb_t2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "schedule_outstanding",
+   "fieldtype": "Currency",
+   "label": "Total Outstanding",
+   "read_only": 1,
+   "allow_on_submit": 1
   },
   {
    "fieldname": "sb4",

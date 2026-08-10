@@ -65,6 +65,12 @@ def recompute_subscription(sub_name):
             "outstanding": outstanding,
             "status": status})
 
+    sched_total = flt(sum(flt(r.amount) for r in rows), 2)
+    frappe.db.set_value("Plot Subscription", sub_name, {
+        "schedule_total": sched_total,
+        "schedule_paid": flt(min(paid, sched_total), 2),
+        "schedule_outstanding": flt(max(sched_total - paid, 0), 2)})
+
     fully_paid = bool(total and paid >= total)
 
     if fully_paid:
@@ -98,6 +104,7 @@ def create_completion_invoice(sub_name):
     try:
         from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
         si = make_sales_invoice(sub.sales_order)
+        si.plot_subscription = sub_name
         si.allocate_advances_automatically = 1   # pulls the installment advances
         si.insert(ignore_permissions=True)
         si.submit()

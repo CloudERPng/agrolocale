@@ -18,7 +18,8 @@
   "allocations",
   "sb3",
   "revenue_journal_entry",
-  "payout_journal_entry"
+  "payout_journal_entry",
+  "off_taker_invoice"
  ],
  "fields": [
   {
@@ -40,7 +41,8 @@
    "fieldname": "off_taker",
    "fieldtype": "Link",
    "label": "Off-taker (Buyer)",
-   "options": "Customer"
+   "options": "Customer",
+   "reqd": 1
   },
   {
    "fieldname": "cb1",
@@ -104,6 +106,13 @@
    "fieldtype": "Link",
    "label": "Payout Journal Entry",
    "options": "Journal Entry",
+   "read_only": 1
+  },
+  {
+   "fieldname": "off_taker_invoice",
+   "fieldtype": "Link",
+   "label": "Off-taker Sales Invoice",
+   "options": "Sales Invoice",
    "read_only": 1
   }
  ],

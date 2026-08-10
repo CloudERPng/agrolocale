@@ -6,6 +6,7 @@
  "issingle": 1,
  "field_order": [
   "company",
+  "accounts_email",
   "auto_post_harvest_revenue",
   "sb2",
   "harvest_proceeds_account",
@@ -18,6 +19,12 @@
    "fieldtype": "Link",
    "label": "Company",
    "options": "Company"
+  },
+  {
+   "fieldname": "accounts_email",
+   "fieldtype": "Data",
+   "label": "Accounts Email",
+   "description": "Notified when an intake is sent to Accounts."
   },
   {
    "fieldname": "auto_post_harvest_revenue",

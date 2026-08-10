@@ -25,6 +25,9 @@ class PlotSubscription(Document):
         n = max(1, self.default_installments())
         start = getdate(self.first_installment_date or self.posting_date or nowdate())
         self.set("payment_schedule", [])
+        self.schedule_total = total
+        self.schedule_paid = 0
+        self.schedule_outstanding = total
         per = flt(total / n, 2)
         running = 0.0
         for i in range(n):
@@ -48,7 +51,27 @@ class PlotSubscription(Document):
         self.save()
         return True
 
+    def apply_price_band(self):
+        """Rates and fees are always taken from the Estate Price Band so they cannot
+        be edited on the form. Blank the estate/plan to price manually is not allowed."""
+        if not self.estate or not self.payment_plan:
+            return
+        for u in (self.sold_units or []):
+            band = frappe.db.get_value("Estate Price Band",
+                {"estate": self.estate, "payment_plan": self.payment_plan,
+                 "unit_type": u.unit_type}, "price")
+            if band is None:
+                frappe.throw(f"No Estate Price Band for {self.estate} – {u.unit_type} – "
+                             f"{self.payment_plan}. Add the price band row first.")
+            u.rate = flt(band) * (1.2 if (u.is_corner_piece and u.unit_type == "Plot") else 1.0)
+        head = frappe.db.get_value("Estate Price Band",
+            {"estate": self.estate, "payment_plan": self.payment_plan, "unit_type": "Plot"},
+            ["developmental_fee", "legal_documentation_fee"], as_dict=True) or {}
+        self.developmental_fee = flt(head.get("developmental_fee"))
+        self.legal_documentation_fee = flt(head.get("legal_documentation_fee"))
+
     def compute_totals(self):
+        self.apply_price_band()
         ppa = flt(frappe.db.get_value("Farm Estate", self.estate, "plots_per_acre")) or 1
         mult = {"Plot": 1, "Acre": ppa, "5 Acres": 5 * ppa, "10 Acres": 10 * ppa}
         total_plots, land_value = 0, 0.0
@@ -82,7 +105,8 @@ class PlotSubscription(Document):
         so = frappe.get_doc({
             "doctype": "Sales Order", "customer": self.subscriber,
             "transaction_date": self.posting_date, "delivery_date": self.posting_date,
-            "order_type": "Sales", "items": [], "payment_schedule": [],
+            "order_type": "Sales", "plot_subscription": self.name,
+        "items": [], "payment_schedule": [],
         })
         for u in self.sold_units:
             rate = flt(u.rate) * (1.2 if (u.is_corner_piece and u.unit_type == "Plot") else 1.0)
@@ -113,3 +137,49 @@ class PlotSubscription(Document):
             so = frappe.get_doc("Sales Order", self.sales_order)
             so.flags.ignore_links = True
             so.cancel()
+
+    @frappe.whitelist()
+    def get_so_outstanding(self):
+        if not self.sales_order:
+            return 0
+        so = frappe.db.get_value("Sales Order", self.sales_order,
+            ["advance_paid", "rounded_total", "grand_total"], as_dict=True)
+        total = flt(so.rounded_total) or flt(so.grand_total)
+        return flt(total - flt(so.advance_paid), 2)
+
+    @frappe.whitelist()
+    def receive_payment(self, amount, mode_of_payment, posting_date=None, reference_no=None):
+        """Create and submit a Payment Entry against this subscription's Sales Order.
+        Validates the amount against the order's outstanding balance."""
+        from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+        from agrolocale.utils import get_mode_of_payment_account
+
+        if self.docstatus != 1 or not self.sales_order:
+            frappe.throw("Submit the subscription first — payments are recorded against its Sales Order.")
+        amount = flt(amount)
+        if amount <= 0:
+            frappe.throw("Enter an amount greater than zero.")
+        outstanding = self.get_so_outstanding()
+        if amount > outstanding + 0.005:
+            frappe.throw(f"Amount ({amount:,.2f}) exceeds the outstanding balance on "
+                         f"{self.sales_order} ({outstanding:,.2f}).")
+
+        pe = get_payment_entry("Sales Order", self.sales_order)
+        pe.posting_date = posting_date or nowdate()
+        pe.mode_of_payment = mode_of_payment
+        acc = get_mode_of_payment_account(mode_of_payment, pe.company)
+        if acc:
+            pe.paid_to = acc
+        pe.paid_amount = amount
+        pe.received_amount = amount
+        for ref in pe.references:
+            if ref.reference_name == self.sales_order:
+                ref.allocated_amount = amount
+        pe.reference_no = reference_no or f"Installment – {self.name}"
+        pe.reference_date = pe.posting_date
+        pe.plot_subscription = self.name
+        pe.insert(ignore_permissions=True)
+        pe.submit()
+        frappe.msgprint(f"Payment Entry {pe.name} recorded for {amount:,.2f}.",
+                        indicator="green", title="Payment received")
+        return pe.name

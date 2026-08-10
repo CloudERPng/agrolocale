@@ -1,0 +1,153 @@
+{
+ "actions": [],
+ "creation": "2026-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "lead_name",
+  "mobile",
+  "email",
+  "cb1",
+  "status",
+  "source",
+  "realtor",
+  "sb1",
+  "interested_estate",
+  "interest_notes",
+  "subscription_intake"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "SLEAD-.YYYY.-",
+   "default": "SLEAD-.YYYY.-"
+  },
+  {
+   "fieldname": "lead_name",
+   "fieldtype": "Data",
+   "label": "Lead Name",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "mobile",
+   "fieldtype": "Data",
+   "label": "Mobile",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "New\nContacted\nQualified\nConverted\nLost",
+   "default": "New",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Select",
+   "label": "Source",
+   "options": "\nRealtor\nReferral\nSocial Media\nSite Visit\nWalk-in\nOther"
+  },
+  {
+   "fieldname": "realtor",
+   "fieldtype": "Data",
+   "label": "Realtor"
+  },
+  {
+   "fieldname": "sb1",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "interested_estate",
+   "fieldtype": "Link",
+   "label": "Interested Estate",
+   "options": "Farm Estate",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "interest_notes",
+   "fieldtype": "Small Text",
+   "label": "Interest / Notes"
+  },
+  {
+   "fieldname": "subscription_intake",
+   "fieldtype": "Link",
+   "label": "Subscription Intake",
+   "options": "Subscription Intake",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Agrolocale",
+ "name": "Sales Lead",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "write": 1
+  },
+  {
+   "role": "Agrolocale Sales",
+   "read": 1,
+   "email": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "create": 1,
+   "write": 1,
+   "delete": 1
+  },
+  {
+   "role": "Agrolocale Customer Care",
+   "read": 1,
+   "email": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "write": 1
+  },
+  {
+   "role": "Agrolocale Accounts",
+   "read": 1,
+   "email": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1
+  }
+ ],
+ "track_changes": 1,
+ "autoname": "naming_series:",
+ "title_field": "lead_name"
+}

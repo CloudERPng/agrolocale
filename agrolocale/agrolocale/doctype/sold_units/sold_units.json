@@ -38,7 +38,9 @@
    "fieldname": "rate",
    "fieldtype": "Currency",
    "label": "Rate",
-   "in_list_view": 1
+   "in_list_view": 1,
+   "read_only": 1,
+   "description": "Fetched from the Estate Price Band."
   },
   {
    "fieldname": "line_total",

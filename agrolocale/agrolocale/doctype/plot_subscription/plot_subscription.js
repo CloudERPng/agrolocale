@@ -1,5 +1,38 @@
 frappe.ui.form.on('Plot Subscription', {
   refresh(frm) {
+    if (frm.doc.docstatus === 1 && frm.doc.sales_order &&
+        frm.doc.subscription_status !== 'Allocated') {
+      frm.call('get_so_outstanding').then((r) => {
+        const out = r.message || 0;
+        if (out > 0) {
+          frm.add_custom_button(`Receive Payment (${format_currency(out)} due)`, () => {
+            const d = new frappe.ui.Dialog({
+              title: 'Receive Payment',
+              fields: [
+                { fieldtype: 'Link', fieldname: 'mode_of_payment', label: 'Mode of Payment',
+                  options: 'Mode of Payment', reqd: 1 },
+                { fieldtype: 'Currency', fieldname: 'amount', label: 'Amount', reqd: 1,
+                  default: out, description: `Outstanding on ${frm.doc.sales_order}: ${format_currency(out)}` },
+                { fieldtype: 'Date', fieldname: 'posting_date', label: 'Payment Date',
+                  default: frappe.datetime.get_today(), reqd: 1 },
+                { fieldtype: 'Data', fieldname: 'reference_no', label: 'Reference No (optional)' },
+              ],
+              primary_action_label: 'Record Payment',
+              primary_action(v) {
+                if ((v.amount || 0) <= 0) { frappe.msgprint('Enter an amount greater than zero.'); return; }
+                if (v.amount > out + 0.005) { frappe.msgprint('Amount exceeds the outstanding balance.'); return; }
+                d.hide();
+                frm.call('receive_payment', {
+                  amount: v.amount, mode_of_payment: v.mode_of_payment,
+                  posting_date: v.posting_date, reference_no: v.reference_no,
+                }).then(() => frm.reload_doc());
+              },
+            });
+            d.show();
+          }).addClass('btn-primary');
+        }
+      });
+    }
     if (frm.doc.docstatus === 0) {
       frm.add_custom_button('Rebuild Payment Schedule', () => {
         frappe.confirm('Rebuild the installments from the payment plan? Manual edits will be lost.', () => {

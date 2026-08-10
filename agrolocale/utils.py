@@ -20,3 +20,10 @@ def ensure_item(item_name):
         "is_purchase_item": 1,
     }).insert(ignore_permissions=True)
     return doc.name
+
+
+def get_mode_of_payment_account(mode_of_payment, company):
+    """Default account configured for a Mode of Payment for this company.
+    Read directly so we do not depend on ERPNext internal import paths."""
+    return frappe.db.get_value("Mode of Payment Account",
+        {"parent": mode_of_payment, "company": company}, "default_account")

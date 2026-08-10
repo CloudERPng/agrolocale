@@ -70,43 +70,66 @@ class HarvestSettlement(Document):
         return True
 
     def on_submit(self):
+        if not self.off_taker:
+            frappe.throw("Select the Off-taker (buyer of the harvest) before submitting.")
         s = get_settings()
         if not s or not s.get("auto_post_harvest_revenue"):
-            frappe.msgprint("Harvest computed. Configure Agrolocale Settings to post the "
-                            "accounting entries automatically.", indicator="orange")
+            frappe.msgprint("Harvest computed. Configure Agrolocale Settings to raise the "
+                            "off-taker invoice automatically.", indicator="orange")
             return
-        self.post_revenue_entry(s)
+        self.create_offtaker_invoice(s)
 
-    def post_revenue_entry(self, s=None):
-        """Dr Proceeds (bank)  Cr Subscriber Harvest Payable (80%)  Cr Commission Income (20%)."""
+    def create_offtaker_invoice(self, s=None):
+        """Bill the off-taker for the full harvest value, then reclass the
+        subscribers' 80% out of income into Subscriber Harvest Payable. Cash from
+        the off-taker arrives later via a normal Payment Entry against the invoice."""
         s = s or get_settings()
-        missing = _missing_accounts(s, ["harvest_proceeds_account",
-                                        "subscriber_harvest_payable_account",
+        missing = _missing_accounts(s, ["subscriber_harvest_payable_account",
                                         "cultivation_commission_income_account"])
         if missing:
-            frappe.msgprint("Cannot post harvest revenue \u2014 set these in Agrolocale Settings: "
-                            + ", ".join(missing), indicator="orange")
+            frappe.msgprint("Cannot raise the off-taker invoice — set these in Agrolocale "
+                            "Settings: " + ", ".join(missing), indicator="orange")
             return
-        if self.revenue_journal_entry or not flt(self.gross_revenue):
+        if self.off_taker_invoice or not flt(self.gross_revenue):
             return
+        from agrolocale.utils import ensure_item
+        crop = frappe.db.get_value("Cultivation Cycle", self.cultivation_cycle, "crop")
+        si = frappe.get_doc({
+            "doctype": "Sales Invoice",
+            "customer": self.off_taker,
+            "company": s.get("company"),
+            "items": [{
+                "item_code": ensure_item(f"Harvest Sale - {crop}"),
+                "qty": flt(self.actual_total_yield_kg) or 1,
+                "rate": flt(self.actual_sale_price_per_kg)
+                        if flt(self.actual_total_yield_kg) else flt(self.gross_revenue),
+                "income_account": s["cultivation_commission_income_account"],
+            }],
+        })
+        si.insert(ignore_permissions=True)
+        si.submit()
+        self.db_set("off_taker_invoice", si.name)
+
+        # Reclass the subscribers' share out of income into the payable.
         je = frappe.get_doc({
             "doctype": "Journal Entry", "voucher_type": "Journal Entry",
             "posting_date": nowdate(), "company": s.get("company"),
-            "user_remark": f"Harvest proceeds and 80/20 split for {self.name} "
+            "user_remark": f"Reclass of subscribers' 80% for {self.name} "
                            f"({self.cultivation_cycle})",
             "accounts": [
-                {"account": s["harvest_proceeds_account"],
-                 "debit_in_account_currency": flt(self.gross_revenue)},
+                {"account": s["cultivation_commission_income_account"],
+                 "debit_in_account_currency": flt(self.subscriber_pool)},
                 {"account": s["subscriber_harvest_payable_account"],
                  "credit_in_account_currency": flt(self.subscriber_pool)},
-                {"account": s["cultivation_commission_income_account"],
-                 "credit_in_account_currency": flt(self.company_share)},
             ],
         })
         je.insert(ignore_permissions=True)
         je.submit()
         self.db_set("revenue_journal_entry", je.name)
-        frappe.msgprint(f"Harvest revenue posted \u2014 Journal Entry {je.name}.", indicator="green")
+        frappe.msgprint(f"Off-taker invoiced ({si.name}) and the 80% moved to Subscriber "
+                        f"Harvest Payable ({je.name}). Record the off-taker's payment "
+                        "against the invoice when it arrives.",
+                        indicator="green", title="Harvest revenue recorded")
 
     @frappe.whitelist()
     def get_pending_allocations(self):
@@ -120,7 +143,7 @@ class HarvestSettlement(Document):
         return out
 
     @frappe.whitelist()
-    def settle_payouts(self, settlements):
+    def settle_payouts(self, settlements, mode_of_payment=None, posting_date=None, narration=None):
         """Settle selected subscribers, each with a cash portion and/or a rollover
         portion. `settlements` is a list of {name, pay_now, rollover}. Cash posts one
         bank Journal Entry; rollovers create Cultivation Credit records (the value
@@ -162,22 +185,33 @@ class HarvestSettlement(Document):
 
         je_name = None
         if cash_lines:
-            missing = _missing_accounts(s, ["harvest_proceeds_account",
-                                            "subscriber_harvest_payable_account"])
+            if not mode_of_payment:
+                frappe.throw("Choose a Mode of Payment for the cash portion.")
+            missing = _missing_accounts(s, ["subscriber_harvest_payable_account"])
             if missing:
                 frappe.throw("Set these in Agrolocale Settings first: " + ", ".join(missing))
+            from agrolocale.utils import get_mode_of_payment_account
+            pay_account = (get_mode_of_payment_account(mode_of_payment, s.get("company"))
+                           or (s or {}).get("harvest_proceeds_account"))
+            if not pay_account:
+                frappe.throw(f"Mode of Payment {mode_of_payment} has no default account for "
+                             "the company, and no fallback Harvest Proceeds Account is set.")
             accounts = [{
                 "account": s["subscriber_harvest_payable_account"],
                 "party_type": "Customer", "party": a.subscriber,
                 "debit_in_account_currency": flt(amt, 2),
                 "user_remark": f"Harvest payout to {a.subscriber}",
             } for a, amt in cash_lines]
-            accounts.append({"account": s["harvest_proceeds_account"],
+            accounts.append({"account": pay_account,
                              "credit_in_account_currency": flt(total_cash, 2)})
+            pdate = posting_date or nowdate()
             je = frappe.get_doc({
                 "doctype": "Journal Entry", "voucher_type": "Bank Entry",
-                "posting_date": nowdate(), "company": s.get("company"),
-                "user_remark": f"Harvest payouts for {self.name}",
+                "posting_date": pdate, "company": s.get("company"),
+                "cheque_no": narration or f"Harvest payout – {self.name}",
+                "cheque_date": pdate,
+                "mode_of_payment": mode_of_payment,
+                "user_remark": narration or f"Harvest payouts for {self.name}",
                 "accounts": accounts,
             })
             je.insert(ignore_permissions=True)
@@ -239,10 +273,21 @@ def _missing_accounts(s, keys):
 def get_cycle_subscribers(cultivation_cycle, actual_total_yield_kg=0):
     """Subscribers enrolled in a cycle, with a suggested yield share. If an actual
     total yield is given, it is split by each subscriber's expected-yield weight."""
-    subs = frappe.get_all("Cultivation Subscription",
+    all_subs = frappe.get_all("Cultivation Subscription",
         filters={"cultivation_cycle": cultivation_cycle, "docstatus": 1,
                  "status": ["in", ["Subscribed", "Cultivating", "Harvested"]]},
-        fields=["name", "subscriber", "expected_yield_kg"])
+        fields=["name", "subscriber", "expected_yield_kg", "setup_invoice"])
+    subs, skipped = [], []
+    for cs in all_subs:
+        inv = frappe.db.get_value("Sales Invoice", cs.setup_invoice,
+            ["docstatus", "outstanding_amount"], as_dict=True) if cs.setup_invoice else None
+        if inv and inv.docstatus == 1 and flt(inv.outstanding_amount) <= 0.005:
+            subs.append(cs)
+        else:
+            skipped.append(cs.subscriber)
+    if skipped:
+        frappe.msgprint("Excluded (setup fee not fully paid): " + ", ".join(sorted(set(skipped))),
+                        indicator="orange", title="Some subscribers do not qualify")
     total_expected = sum(flt(s.expected_yield_kg) for s in subs)
     actual = flt(actual_total_yield_kg)
     out = []
