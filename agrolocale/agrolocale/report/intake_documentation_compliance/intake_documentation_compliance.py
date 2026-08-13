@@ -17,12 +17,12 @@ def execute(filters=None):
     conds, vals = ["1=1"], {}
     if filters.get("status"): conds.append("status=%(status)s"); vals["status"]=filters["status"]
     rows = frappe.db.sql(f'''select name, full_name, status, subscription_form, faq_signed,
-        id_document, passport_photo from `tabSubscription Intake`
+        id_document, passport_photo, consent_form from `tabSubscription Intake`
         where {" and ".join(conds)} order by modified desc''', vals, as_dict=True)
     data = []
     for r in rows:
         pairs = [("Form","subscription_form"),("Signed FAQ","faq_signed"),
-                 ("ID","id_document"),("Photo","passport_photo")]
+                 ("ID","id_document"),("Photo","passport_photo"),("Consent Form","consent_form")]
         missing = [lbl for lbl,fn in pairs if not r.get(fn)]
         if filters.get("only_incomplete") and not missing:
             continue
@@ -31,5 +31,6 @@ def execute(filters=None):
             "has_faq":"Yes" if r["faq_signed"] else "No",
             "has_id":"Yes" if r["id_document"] else "No",
             "has_photo":"Yes" if r["passport_photo"] else "No",
+            "has_consent":"Yes" if r["consent_form"] else "No",
             "missing":", ".join(missing) or "\u2014"})
     return columns, data

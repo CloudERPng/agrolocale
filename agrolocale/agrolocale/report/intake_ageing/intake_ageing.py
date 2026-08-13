@@ -9,12 +9,12 @@ def execute(filters=None):
         {'label': 'Count', 'fieldname': 'cnt', 'fieldtype': 'Int', 'width': 90},
         {'label': 'Avg Days in Stage', 'fieldname': 'avg_days', 'fieldtype': 'Float', 'width': 150},
         {'label': 'Oldest (days)', 'fieldname': 'max_days', 'fieldtype': 'Int', 'width': 120},
-        {'label': 'Value Held', 'fieldname': 'value', 'fieldtype': 'Currency', 'width': 140}
+        {'label': 'Contract Value in Stage', 'fieldname': 'value', 'fieldtype': 'Currency', 'width': 170}
     ]
     rows = frappe.db.sql('''select i.status,
         count(*) cnt, avg(datediff(curdate(), date(i.modified))) avg_days,
         max(datediff(curdate(), date(i.modified))) max_days,
-        coalesce(sum((select sum(r.amount) from `tabIntake Receipt` r where r.parent=i.name)),0) value
+        coalesce(sum(i.total_contract_value),0) value
         from `tabSubscription Intake` i
         where i.status not in ('Processed')
         group by i.status order by cnt desc''', as_dict=True)

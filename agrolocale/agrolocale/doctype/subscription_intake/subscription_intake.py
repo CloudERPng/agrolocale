@@ -7,6 +7,8 @@ REQUIRED_DOCS = [
     ("subscription_form", "Subscription Form"),
     ("faq_signed", "Signed FAQ"),
     ("id_document", "Means of Identification"),
+    ("passport_photo", "Passport Photo"),
+    ("consent_form", "Signed Consent Form"),
 ]
 
 
@@ -60,12 +62,6 @@ class SubscriptionIntake(Document):
             frappe.throw("Attach the following before sending to Accounts: " + ", ".join(missing))
         if not self.sold_units:
             frappe.throw("Add at least one row in Units (what the subscriber is buying).")
-        if not self.receipts:
-            frappe.throw("Add at least one receipt, or note in Customer Care Notes why none is attached.")
-        unverified = [r.idx for r in self.receipts if not r.verified]
-        if unverified:
-            frappe.throw(f"Tick Verified on receipt row(s) {', '.join(map(str, unverified))} "
-                         "after checking them against the bank record.")
         self.db_set("status", "With Accounts")
         self.notify_accounts()
         frappe.msgprint("Sent to Accounts for processing.", indicator="green")
@@ -75,17 +71,17 @@ class SubscriptionIntake(Document):
         if not email:
             return
         try:
-            total = flt(sum(flt(r.amount) for r in self.receipts))
             frappe.sendmail(
                 recipients=[e.strip() for e in email.split(",") if e.strip()],
                 subject=f"Subscription intake ready for processing \u2013 {self.name}",
-                message=(f"<p>A subscription intake has been verified by Customer Care and is "
-                         f"ready for processing.</p>"
+                message=(f"<p>Customer Care have verified the documents for a subscription "
+                         f"and it is ready for processing.</p>"
                          f"<p><b>Subscriber:</b> {self.full_name or self.existing_customer}<br>"
                          f"<b>Estate:</b> {self.estate}<br>"
                          f"<b>Payment plan:</b> {self.payment_plan}<br>"
-                         f"<b>Receipts attached:</b> {len(self.receipts)} totalling {total:,.2f}</p>"
-                         f"<p>Open it in CloudERP.One to process.</p>"),
+                         f"<b>Contract value:</b> {flt(self.total_contract_value):,.2f}</p>"
+                         f"<p>Open it in CloudERP.One to process, then record the "
+                         f"subscriber's payments on the subscription.</p>"),
                 reference_doctype=self.doctype, reference_name=self.name,
             )
         except Exception:
@@ -157,35 +153,10 @@ class SubscriptionIntake(Document):
         self.db_set("status", "Processed")
         frappe.msgprint(
             f"Created draft Plot Subscription {sub.name} for {customer}. Review the rates and "
-            "installments, then submit it. Afterwards use <b>Record Receipts</b> here to post "
-            "the payments that came with the form.",
+            "installments, then submit it. Record the subscriber's payments with the "
+            "<b>Receive Payment</b> button on the subscription.",
             indicator="green", title="Intake processed")
         return sub.name
-
-    @frappe.whitelist()
-    def record_receipts(self):
-        """Post the verified receipts as payments against the created subscription."""
-        if not self.plot_subscription:
-            frappe.throw("Process the intake first.")
-        sub = frappe.get_doc("Plot Subscription", self.plot_subscription)
-        if sub.docstatus != 1:
-            frappe.throw(f"Submit {sub.name} before recording its payments.")
-        done = 0
-        for r in self.receipts:
-            if r.payment_entry or not flt(r.amount) or not r.verified:
-                continue
-            pe = sub.receive_payment(
-                amount=flt(r.amount),
-                mode_of_payment=r.mode_of_payment,
-                posting_date=r.receipt_date,
-                reference_no=r.bank_reference or f"Intake {self.name}",
-            )
-            frappe.db.set_value("Intake Receipt", r.name, "payment_entry", pe)
-            done += 1
-        self.reload()
-        frappe.msgprint(f"Recorded {done} payment(s) against {sub.name}."
-                        if done else "No new verified receipts to record.",
-                        indicator="green" if done else "orange")
 
 
 def _default(doctype, field):

@@ -33,8 +33,7 @@
   "cb3",
   "id_document",
   "passport_photo",
-  "sb4",
-  "receipts",
+  "consent_form",
   "sb5",
   "customer_care_notes",
   "return_reason",
@@ -179,7 +178,8 @@
   },
   {
    "fieldname": "sb3",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Documents \u2013 all five required (Customer Care checklist)"
   },
   {
    "fieldname": "subscription_form",
@@ -206,14 +206,10 @@
    "label": "Passport Photo"
   },
   {
-   "fieldname": "sb4",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "receipts",
-   "fieldtype": "Table",
-   "label": "Receipts",
-   "options": "Intake Receipt"
+   "fieldname": "consent_form",
+   "fieldtype": "Attach",
+   "label": "Signed Consent Form",
+   "description": "Cultivation consent clauses, signed by the subscriber."
   },
   {
    "fieldname": "sb5",
