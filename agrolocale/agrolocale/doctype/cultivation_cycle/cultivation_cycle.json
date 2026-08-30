@@ -8,6 +8,7 @@
   "batch_name",
   "crop",
   "season",
+  "farm",
   "cb1",
   "status",
   "company_share_pct",
@@ -20,7 +21,13 @@
   "capacity_acres",
   "cb2",
   "subscribed_plots",
-  "subscribed_acres"
+  "subscribed_acres",
+  "sb_cost",
+  "warehouse",
+  "cost_center",
+  "cb_cost",
+  "project",
+  "total_input_cost"
  ],
  "fields": [
   {
@@ -49,6 +56,14 @@
    "fieldname": "season",
    "fieldtype": "Data",
    "label": "Season",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "farm",
+   "fieldtype": "Link",
+   "label": "Farm / Estate",
+   "options": "Farm Estate",
+   "description": "Which farm this batch is grown on.",
    "in_list_view": 1
   },
   {
@@ -118,6 +133,44 @@
    "fieldtype": "Float",
    "label": "Subscribed (Acres)",
    "read_only": 1
+  },
+  {
+   "fieldname": "sb_cost",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "label": "Farm Warehouse",
+   "options": "Warehouse",
+   "description": "Inputs are issued from here.",
+   "fetch_from": "farm.default_warehouse"
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "label": "Cost Centre",
+   "options": "Cost Center",
+   "fetch_from": "farm.cost_center"
+  },
+  {
+   "fieldname": "cb_cost",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project",
+   "read_only": 1,
+   "description": "Created automatically on submit. All cycle income and cost is tagged to it."
+  },
+  {
+   "fieldname": "total_input_cost",
+   "fieldtype": "Currency",
+   "label": "Input Cost to Date",
+   "read_only": 1,
+   "description": "Value of materials issued to this cycle."
   }
  ],
  "links": [],

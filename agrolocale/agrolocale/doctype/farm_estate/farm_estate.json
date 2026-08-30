@@ -13,7 +13,10 @@
   "default_plot_size_sqm",
   "plots_per_hectare",
   "plots_per_acre",
-  "total_hectares"
+  "total_hectares",
+  "sb_farm",
+  "default_warehouse",
+  "cost_center"
  ],
  "fields": [
   {
@@ -71,6 +74,24 @@
    "fieldtype": "Float",
    "label": "Total Hectares (rollup)",
    "read_only": 1
+  },
+  {
+   "fieldname": "sb_farm",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "default_warehouse",
+   "fieldtype": "Link",
+   "label": "Farm Warehouse",
+   "options": "Warehouse",
+   "description": "Where this farm's seedlings, fertiliser and other inputs are stored."
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "label": "Farm Cost Centre",
+   "options": "Cost Center",
+   "description": "All income and direct cost for this farm is tagged here."
   }
  ],
  "links": [],

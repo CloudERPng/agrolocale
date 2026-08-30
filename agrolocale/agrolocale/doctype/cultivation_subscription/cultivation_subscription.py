@@ -53,10 +53,15 @@ class CultivationSubscription(Document):
                          f"committed {committed}, requesting {req}.")
 
     def on_submit(self):
+        _cyc = frappe.db.get_value("Cultivation Cycle", self.cultivation_cycle,
+            ["project", "cost_center"], as_dict=True) or {}
         si = frappe.get_doc({
             "doctype": "Sales Invoice", "customer": self.subscriber,
+            "project": _cyc.get("project"),
             "items": [{"item_code": ensure_item(f"Cultivation Setup & Management - {self.crop}"),
-                       "qty": 1, "rate": flt(self.setup_fee)}],
+                       "qty": 1, "rate": flt(self.setup_fee),
+                       "project": _cyc.get("project"),
+                       "cost_center": _cyc.get("cost_center")}],
         })
         si.insert(ignore_permissions=True)
         self.db_set("setup_invoice", si.name)
