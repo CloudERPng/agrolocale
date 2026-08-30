@@ -53,6 +53,12 @@ class CultivationSubscription(Document):
                          f"committed {committed}, requesting {req}.")
 
     def on_submit(self):
+        if self.flags.get("from_programme"):
+            # The batch raises one itemised invoice covering every crop.
+            cyc = frappe.get_doc("Cultivation Cycle", self.cultivation_cycle)
+            cyc.db_set("subscribed_plots", flt(cyc.subscribed_plots) + flt(self.number_of_plots))
+            cyc.db_set("subscribed_acres", flt(cyc.subscribed_acres) + flt(self.number_of_acres))
+            return
         _cyc = frappe.db.get_value("Cultivation Cycle", self.cultivation_cycle,
             ["project", "cost_center"], as_dict=True) or {}
         si = frappe.get_doc({

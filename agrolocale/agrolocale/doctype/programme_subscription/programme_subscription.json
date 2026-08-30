@@ -1,0 +1,161 @@
+{
+ "actions": [],
+ "creation": "2026-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "subscriber",
+  "cultivation_programme",
+  "eligibility_subscription",
+  "cb1",
+  "status",
+  "number_of_plots",
+  "number_of_acres",
+  "total_plot_equivalents",
+  "sb_split",
+  "crop_allocations",
+  "sb_tot",
+  "total_setup_fee",
+  "cb2",
+  "setup_invoice"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "PSUB-.YYYY.-",
+   "default": "PSUB-.YYYY.-"
+  },
+  {
+   "fieldname": "subscriber",
+   "fieldtype": "Link",
+   "label": "Subscriber",
+   "options": "Customer",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "cultivation_programme",
+   "fieldtype": "Link",
+   "label": "Batch / Programme",
+   "options": "Cultivation Programme",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "eligibility_subscription",
+   "fieldtype": "Link",
+   "label": "Eligibility (Land owned)",
+   "options": "Plot Subscription"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Subscribed\nCultivating\nHarvested\nSettled",
+   "default": "Subscribed",
+   "in_list_view": 1,
+   "allow_on_submit": 1
+  },
+  {
+   "fieldname": "number_of_plots",
+   "fieldtype": "Float",
+   "label": "Number of Plots",
+   "default": "0"
+  },
+  {
+   "fieldname": "number_of_acres",
+   "fieldtype": "Float",
+   "label": "Number of Acres",
+   "default": "0"
+  },
+  {
+   "fieldname": "total_plot_equivalents",
+   "fieldtype": "Float",
+   "label": "Total Plot-Equivalents",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_split",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "crop_allocations",
+   "fieldtype": "Table",
+   "label": "Crop Allocations",
+   "options": "Programme Subscription Crop",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_tot",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "total_setup_fee",
+   "fieldtype": "Currency",
+   "label": "Total Setup Fee",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "setup_invoice",
+   "fieldtype": "Link",
+   "label": "Setup Invoice",
+   "options": "Sales Invoice",
+   "read_only": 1,
+   "allow_on_submit": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Agrolocale",
+ "name": "Programme Subscription",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "write": 1
+  },
+  {
+   "role": "Agrolocale Accounts",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "email": 1
+  }
+ ],
+ "track_changes": 1,
+ "is_submittable": 1,
+ "autoname": "naming_series:",
+ "title_field": "subscriber"
+}

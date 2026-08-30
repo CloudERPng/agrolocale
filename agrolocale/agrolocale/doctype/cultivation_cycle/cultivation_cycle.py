@@ -4,6 +4,26 @@ from frappe.utils import flt, nowdate
 
 
 class CultivationCycle(Document):
+
+    def validate(self):
+        """Crops are grouped into a batch because they share a cultivation window.
+        A crop whose harvest falls well outside the batch's window is almost always
+        the wrong crop or the wrong batch."""
+        if not self.cultivation_programme:
+            return
+        prog = frappe.db.get_value("Cultivation Programme", self.cultivation_programme,
+            ["harvest_start", "harvest_end", "programme_name"], as_dict=True)
+        if not prog or not self.harvest_start or not self.harvest_end:
+            return
+        from frappe.utils import getdate, date_diff
+        drift = max(abs(date_diff(getdate(self.harvest_start), getdate(prog.harvest_start))),
+                    abs(date_diff(getdate(self.harvest_end), getdate(prog.harvest_end))))
+        if drift > 45:
+            frappe.msgprint(
+                f"This crop's harvest window differs from batch {prog.programme_name} by "
+                f"about {drift} days. Crops are batched so they harvest together and pay out "
+                "once \u2014 check the crop or the batch is correct.",
+                indicator="orange", title="Harvest window differs from the batch")
     def on_submit(self):
         self.create_project()
 

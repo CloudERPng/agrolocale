@@ -5,59 +5,50 @@
  "engine": "InnoDB",
  "field_order": [
   "naming_series",
-  "cultivation_programme",
-  "batch_name",
-  "crop",
-  "season",
+  "programme_name",
   "farm",
+  "season",
   "cb1",
   "status",
-  "company_share_pct",
-  "sb1",
+  "all_cycles_settled",
+  "sb_dates",
   "cultivation_start",
   "harvest_start",
+  "cb2",
   "harvest_end",
-  "sb2",
+  "sb_cap",
   "capacity_plots",
   "capacity_acres",
-  "cb2",
+  "cb3",
   "subscribed_plots",
   "subscribed_acres",
+  "sb_mix",
+  "crop_mix",
   "sb_cost",
   "warehouse",
-  "cost_center",
-  "cb_cost",
-  "project",
-  "total_input_cost"
+  "cost_center"
  ],
  "fields": [
   {
    "fieldname": "naming_series",
    "fieldtype": "Select",
    "label": "Series",
-   "options": "CYC-.YYYY.-",
-   "default": "CYC-.YYYY.-"
+   "options": "PROG-.YYYY.-",
+   "default": "PROG-.YYYY.-"
   },
   {
-   "fieldname": "cultivation_programme",
-   "fieldtype": "Link",
-   "label": "Batch / Programme",
-   "options": "Cultivation Programme",
-   "in_list_view": 1,
-   "description": "Dates, farm and costing are inherited from the batch."
-  },
-  {
-   "fieldname": "batch_name",
+   "fieldname": "programme_name",
    "fieldtype": "Data",
-   "label": "Batch Name",
+   "label": "Batch / Programme Name",
    "reqd": 1,
-   "in_list_view": 1
+   "in_list_view": 1,
+   "description": "What the client markets, e.g. Batch B."
   },
   {
-   "fieldname": "crop",
+   "fieldname": "farm",
    "fieldtype": "Link",
-   "label": "Crop",
-   "options": "Crop",
+   "label": "Farm / Estate",
+   "options": "Farm Estate",
    "reqd": 1,
    "in_list_view": 1
   },
@@ -68,14 +59,6 @@
    "in_list_view": 1
   },
   {
-   "fieldname": "farm",
-   "fieldtype": "Link",
-   "label": "Farm / Estate",
-   "options": "Farm Estate",
-   "description": "Which farm this batch is grown on.",
-   "in_list_view": 1
-  },
-  {
    "fieldname": "cb1",
    "fieldtype": "Column Break"
   },
@@ -83,39 +66,46 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Open\nCultivating\nHarvesting\nSettled\nClosed\nClosed \u2013 No Harvest",
+   "options": "Open\nCultivating\nHarvesting\nSettled\nClosed",
    "default": "Open",
-   "in_list_view": 1,
-   "description": "Use 'Closed \u2013 No Harvest' for a failed crop so the batch can still be settled."
+   "in_list_view": 1
   },
   {
-   "fieldname": "company_share_pct",
-   "fieldtype": "Percent",
-   "label": "Company Share %",
-   "default": "20",
-   "fetch_from": "crop.company_share_pct"
+   "fieldname": "all_cycles_settled",
+   "fieldtype": "Check",
+   "label": "All Crops Settled",
+   "read_only": 1,
+   "description": "Ticks automatically once every crop cycle in this batch is settled or closed with no harvest.",
+   "allow_on_submit": 1
   },
   {
-   "fieldname": "sb1",
+   "fieldname": "sb_dates",
    "fieldtype": "Section Break"
   },
   {
    "fieldname": "cultivation_start",
    "fieldtype": "Date",
-   "label": "Cultivation Start"
+   "label": "Cultivation Start",
+   "reqd": 1
   },
   {
    "fieldname": "harvest_start",
    "fieldtype": "Date",
-   "label": "Harvest Start"
+   "label": "Harvest Start",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
   },
   {
    "fieldname": "harvest_end",
    "fieldtype": "Date",
-   "label": "Harvest End"
+   "label": "Harvest End",
+   "reqd": 1
   },
   {
-   "fieldname": "sb2",
+   "fieldname": "sb_cap",
    "fieldtype": "Section Break"
   },
   {
@@ -129,20 +119,33 @@
    "label": "Capacity (Acres)"
   },
   {
-   "fieldname": "cb2",
+   "fieldname": "cb3",
    "fieldtype": "Column Break"
   },
   {
    "fieldname": "subscribed_plots",
    "fieldtype": "Float",
    "label": "Subscribed (Plots)",
-   "read_only": 1
+   "read_only": 1,
+   "allow_on_submit": 1
   },
   {
    "fieldname": "subscribed_acres",
    "fieldtype": "Float",
    "label": "Subscribed (Acres)",
-   "read_only": 1
+   "read_only": 1,
+   "allow_on_submit": 1
+  },
+  {
+   "fieldname": "sb_mix",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "crop_mix",
+   "fieldtype": "Table",
+   "label": "Crop Mix",
+   "options": "Programme Crop Mix",
+   "reqd": 1
   },
   {
    "fieldname": "sb_cost",
@@ -153,7 +156,6 @@
    "fieldtype": "Link",
    "label": "Farm Warehouse",
    "options": "Warehouse",
-   "description": "Inputs are issued from here.",
    "fetch_from": "farm.default_warehouse"
   },
   {
@@ -162,38 +164,17 @@
    "label": "Cost Centre",
    "options": "Cost Center",
    "fetch_from": "farm.cost_center"
-  },
-  {
-   "fieldname": "cb_cost",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "project",
-   "fieldtype": "Link",
-   "label": "Project",
-   "options": "Project",
-   "read_only": 1,
-   "description": "Created automatically on submit. All cycle income and cost is tagged to it."
-  },
-  {
-   "fieldname": "total_input_cost",
-   "fieldtype": "Currency",
-   "label": "Input Cost to Date",
-   "read_only": 1,
-   "description": "Value of materials issued to this cycle."
   }
  ],
  "links": [],
  "modified": "2026-01-01 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Agrolocale",
- "name": "Cultivation Cycle",
+ "name": "Cultivation Programme",
  "owner": "Administrator",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "index_web_pages_for_search": 1,
- "is_submittable": 1,
  "permissions": [
   {
    "create": 1,
@@ -209,9 +190,22 @@
    "cancel": 1,
    "amend": 1,
    "write": 1
+  },
+  {
+   "role": "Agrolocale Accounts",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "email": 1
   }
  ],
  "track_changes": 1,
+ "is_submittable": 1,
  "autoname": "naming_series:",
- "title_field": "batch_name"
+ "title_field": "programme_name"
 }
