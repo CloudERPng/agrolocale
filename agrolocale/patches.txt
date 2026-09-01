@@ -1,1 +1,2 @@
 # Patches applied during migrate. One dotted path per line.
+agrolocale.patches.backfill_cycle_costing

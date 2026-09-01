@@ -65,9 +65,19 @@ class CultivationCycle(Document):
         return flt(total, 2)
 
     @frappe.whitelist()
-    def make_material_issue(self):
-        """Pre-filled Material Issue for this cycle: right warehouse, cost centre
-        and project already set, so staff cannot forget to tag the cost."""
+    def sync_costing_defaults(self):
+        """Pull the warehouse and cost centre down from the programme or the farm.
+        Useful for cycles created before the farm was fully configured."""
+        wh, cc = _resolve_costing(self)
+        if not wh:
+            frappe.throw(f"No Farm Warehouse found. Set it on the Farm Estate "
+                         f"({self.farm or 'no farm set'}) or directly on this cycle.")
+        frappe.msgprint(f"Warehouse set to {wh}" + (f", cost centre {cc}" if cc else "") + ".",
+                        indicator="green")
+        return {"warehouse": wh, "cost_center": cc}
+
+    @frappe.whitelist()
+    def _unused_make_material_issue(self):
         if not self.warehouse:
             frappe.throw("Set the Farm Warehouse on this cycle (or on the farm) first.")
         se = frappe.new_doc("Stock Entry")
@@ -83,17 +93,45 @@ class CultivationCycle(Document):
 @frappe.whitelist()
 def make_material_issue(source_name, target_doc=None):
     """Open a Material Issue pre-tagged with the cycle's warehouse, cost centre
-    and project."""
+    and project. Falls back to the farm's defaults if the cycle was created before
+    the farm was configured."""
     cycle = frappe.get_doc("Cultivation Cycle", source_name)
-    if not cycle.warehouse:
-        frappe.throw("Set the Farm Warehouse on this cycle (or on the farm) first.")
+    warehouse, cost_center = _resolve_costing(cycle)
+    if not warehouse:
+        frappe.throw(
+            "No Farm Warehouse could be found for this cycle.<br><br>"
+            "Set <b>Farm Warehouse</b> on the Farm Estate "
+            f"(<b>{cycle.farm or 'no farm set on this cycle'}</b>), then reopen this cycle "
+            "\u2014 or set the warehouse directly on the cycle, which is editable.")
     se = frappe.new_doc("Stock Entry")
     se.stock_entry_type = "Material Issue"
     se.purpose = "Material Issue"
-    se.from_warehouse = cycle.warehouse
+    se.from_warehouse = warehouse
     se.project = cycle.project
     se.posting_date = nowdate()
     se.remarks = f"Farm inputs issued to {cycle.name} ({cycle.crop})"
     for row in se.get("items", []):
-        row.cost_center = cycle.cost_center
+        row.cost_center = cost_center
     return se
+
+
+def _resolve_costing(cycle):
+    """Warehouse and cost centre from the cycle, else the programme, else the farm.
+    Writes them back so the next issue does not have to look them up again."""
+    warehouse, cost_center = cycle.warehouse, cycle.cost_center
+    if not warehouse or not cost_center:
+        if cycle.get("cultivation_programme"):
+            prog = frappe.db.get_value("Cultivation Programme", cycle.cultivation_programme,
+                ["warehouse", "cost_center"], as_dict=True) or {}
+            warehouse = warehouse or prog.get("warehouse")
+            cost_center = cost_center or prog.get("cost_center")
+    if (not warehouse or not cost_center) and cycle.get("farm"):
+        farm = frappe.db.get_value("Farm Estate", cycle.farm,
+            ["default_warehouse", "cost_center"], as_dict=True) or {}
+        warehouse = warehouse or farm.get("default_warehouse")
+        cost_center = cost_center or farm.get("cost_center")
+    if warehouse and warehouse != cycle.warehouse:
+        cycle.db_set("warehouse", warehouse)
+    if cost_center and cost_center != cycle.cost_center:
+        cycle.db_set("cost_center", cost_center)
+    return warehouse, cost_center

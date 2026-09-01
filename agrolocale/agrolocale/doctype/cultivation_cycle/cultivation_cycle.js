@@ -9,6 +9,14 @@ frappe.ui.form.on('Cultivation Cycle', {
       });
     }, 'Costing').addClass('btn-primary');
 
+    if (!frm.doc.warehouse || !frm.doc.cost_center) {
+      frm.set_intro('This cycle has no warehouse or cost centre yet. Click ' +
+        'Costing \u2192 Sync Costing Defaults to pull them from the farm.', 'orange');
+      frm.add_custom_button('Sync Costing Defaults', () => {
+        frm.call('sync_costing_defaults').then(() => frm.reload_doc());
+      }, 'Costing').addClass('btn-primary');
+    }
+
     frm.add_custom_button('Refresh Input Cost', () => {
       frm.call('refresh_input_cost').then((r) => {
         frm.reload_doc();

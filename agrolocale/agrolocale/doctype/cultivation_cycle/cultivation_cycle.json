@@ -154,14 +154,16 @@
    "label": "Farm Warehouse",
    "options": "Warehouse",
    "description": "Inputs are issued from here.",
-   "fetch_from": "farm.default_warehouse"
+   "fetch_from": "farm.default_warehouse",
+   "allow_on_submit": 1
   },
   {
    "fieldname": "cost_center",
    "fieldtype": "Link",
    "label": "Cost Centre",
    "options": "Cost Center",
-   "fetch_from": "farm.cost_center"
+   "fetch_from": "farm.cost_center",
+   "allow_on_submit": 1
   },
   {
    "fieldname": "cb_cost",
