@@ -18,22 +18,44 @@ class PlotSubscription(Document):
         return cint(self.number_of_installments) or self.PLAN_MONTHS.get(self.payment_plan, 1)
 
     def build_payment_schedule(self):
-        """Spread the contract value over equal monthly installments per the payment plan."""
+        """Agrolocale's terms are a deposit at signing, then N monthly installments
+        starting ONE MONTH LATER. A "3 month" plan therefore runs over four payments:
+        Initial Deposit, Month 1, Month 2, Month 3."""
         total = flt(self.total_contract_value)
         if total <= 0:
             return
-        n = max(1, self.default_installments())
-        start = getdate(self.first_installment_date or self.posting_date or nowdate())
+        n = max(1, self.default_installments())   # monthly installments AFTER the deposit
+        start = getdate(self.deposit_date or self.first_installment_date
+                        or self.posting_date or nowdate())
         self.set("payment_schedule", [])
         self.schedule_total = total
         self.schedule_paid = 0
         self.schedule_outstanding = total
-        per = flt(total / n, 2)
+
+        deposit = flt(self.initial_deposit)
+        if deposit > total:
+            frappe.throw(f"The initial deposit ({deposit:,.2f}) cannot exceed the contract "
+                         f"value ({total:,.2f}).")
+        if not deposit:
+            deposit = flt(total / (n + 1), 2)
+
+        self.append("payment_schedule", {
+            "installment_label": "Initial Deposit",
+            "due_date": start,
+            "amount": deposit,
+            "amount_paid": 0,
+            "outstanding": deposit,
+            "status": "Pending",
+        })
+
+        balance = flt(total - deposit, 2)
+        per = flt(balance / n, 2)
         running = 0.0
-        for i in range(n):
-            amt = per if i < n - 1 else flt(total - running, 2)
+        for i in range(1, n + 1):
+            amt = per if i < n else flt(balance - running, 2)
             running += amt
             self.append("payment_schedule", {
+                "installment_label": f"Month {i}",
                 "due_date": add_months(start, i),
                 "amount": amt,
                 "amount_paid": 0,
@@ -111,11 +133,14 @@ class PlotSubscription(Document):
         for u in self.sold_units:
             rate = flt(u.rate) * (1.2 if (u.is_corner_piece and u.unit_type == "Plot") else 1.0)
             so.append("items", {"item_code": ensure_item(f"Land - {u.unit_type} - {self.estate}"),
-                                "qty": u.qty, "rate": rate})
+                                "qty": u.qty, "rate": rate,
+                                "cost_center": self.cost_center})
         if flt(self.developmental_fee):
-            so.append("items", {"item_code": ensure_item("Developmental Fee"), "qty": 1, "rate": self.developmental_fee})
+            so.append("items", {"item_code": ensure_item("Developmental Fee"), "qty": 1,
+                                "rate": self.developmental_fee, "cost_center": self.cost_center})
         if flt(self.legal_documentation_fee):
-            so.append("items", {"item_code": ensure_item("Legal Documentation"), "qty": 1, "rate": self.legal_documentation_fee})
+            so.append("items", {"item_code": ensure_item("Legal Documentation"), "qty": 1,
+                                "rate": self.legal_documentation_fee, "cost_center": self.cost_center})
         for s in self.payment_schedule:
             so.append("payment_schedule", {"due_date": s.due_date, "payment_amount": s.amount})
         so.insert(ignore_permissions=True)

@@ -16,7 +16,8 @@
   "total_hectares",
   "sb_farm",
   "default_warehouse",
-  "cost_center"
+  "cost_center",
+  "land_cost_center"
  ],
  "fields": [
   {
@@ -92,6 +93,13 @@
    "label": "Farm Cost Centre",
    "options": "Cost Center",
    "description": "All income and direct cost for this farm is tagged here."
+  },
+  {
+   "fieldname": "land_cost_center",
+   "fieldtype": "Link",
+   "label": "Land Sales Cost Centre",
+   "options": "Cost Center",
+   "description": "Land revenue for this estate is tagged here, so the P&L can be filtered by estate."
   }
  ],
  "links": [],

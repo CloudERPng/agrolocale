@@ -1,3 +1,4 @@
 # Patches applied during migrate. One dotted path per line.
 agrolocale.patches.backfill_cycle_costing
 agrolocale.patches.backfill_batch_setup_invoice
+agrolocale.patches.backfill_land_cost_center

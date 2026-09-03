@@ -13,6 +13,7 @@
   "subscription_status",
   "realtor",
   "realtor_group",
+  "cost_center",
   "sb1",
   "sold_units",
   "sb2",
@@ -24,8 +25,10 @@
   "total_contract_value",
   "sb3",
   "number_of_installments",
+  "initial_deposit",
   "cb3",
   "first_installment_date",
+  "deposit_date",
   "payment_schedule",
   "sb_totals",
   "schedule_total",
@@ -99,6 +102,14 @@
    "label": "Realtor Group"
   },
   {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "label": "Cost Centre",
+   "options": "Cost Center",
+   "fetch_from": "estate.land_cost_center",
+   "description": "Tags this sale's revenue so land income can be filtered by estate."
+  },
+  {
    "fieldname": "sb1",
    "fieldtype": "Section Break"
   },
@@ -158,8 +169,14 @@
   {
    "fieldname": "number_of_installments",
    "fieldtype": "Int",
-   "label": "Number of Installments",
-   "description": "Blank uses the plan default: Outright 3, 4-6M 6, 7-12M 12."
+   "label": "Number of Monthly Installments",
+   "description": "Monthly installments AFTER the deposit. Blank uses the plan: Outright 3, 4-6M 6, 7-12M 12. A 3-month plan therefore runs deposit + 3 months."
+  },
+  {
+   "fieldname": "initial_deposit",
+   "fieldtype": "Currency",
+   "label": "Initial Deposit",
+   "description": "Paid at signing. Leave blank to spread the contract evenly across the deposit and every month."
   },
   {
    "fieldname": "cb3",
@@ -170,6 +187,12 @@
    "fieldtype": "Date",
    "label": "First Installment Date",
    "description": "Defaults to the posting date."
+  },
+  {
+   "fieldname": "deposit_date",
+   "fieldtype": "Date",
+   "label": "Deposit Date",
+   "description": "Defaults to the posting date. Month 1 falls one month after this."
   },
   {
    "fieldname": "payment_schedule",

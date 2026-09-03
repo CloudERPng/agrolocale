@@ -105,7 +105,15 @@ def create_completion_invoice(sub_name):
         from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
         si = make_sales_invoice(sub.sales_order)
         si.plot_subscription = sub_name
-        si.allocate_advances_automatically = 1   # pulls the installment advances
+        si.allocate_advances_automatically = 1
+        # Carry the estate's cost centre onto the revenue lines so land income can be
+        # filtered by estate on the P&L.
+        cc = frappe.db.get_value("Plot Subscription", sub_name, "cost_center")
+        if cc:
+            si.cost_center = cc
+            for row in si.get("items", []):
+                if not row.cost_center:
+                    row.cost_center = cc   # pulls the installment advances
         si.insert(ignore_permissions=True)
         si.submit()
         frappe.db.set_value("Plot Subscription", sub_name, "sales_invoice", si.name)
