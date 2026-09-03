@@ -279,14 +279,14 @@ def get_cycle_subscribers(cultivation_cycle, actual_total_yield_kg=0):
         fields=["name", "subscriber", "expected_yield_kg", "setup_invoice"])
     subs, skipped = [], []
     for cs in all_subs:
-        inv = frappe.db.get_value("Sales Invoice", cs.setup_invoice,
-            ["docstatus", "outstanding_amount"], as_dict=True) if cs.setup_invoice else None
-        if inv and inv.docstatus == 1 and flt(inv.outstanding_amount) <= 0.005:
+        ok, reason = setup_fee_status(cs)
+        if ok:
             subs.append(cs)
         else:
-            skipped.append(cs.subscriber)
+            skipped.append(f"{cs.subscriber} ({reason})")
     if skipped:
-        frappe.msgprint("Excluded (setup fee not fully paid): " + ", ".join(sorted(set(skipped))),
+        frappe.msgprint("These subscribers were not included:<br>\u2022 "
+                        + "<br>\u2022 ".join(sorted(set(skipped))),
                         indicator="orange", title="Some subscribers do not qualify")
     total_expected = sum(flt(s.expected_yield_kg) for s in subs)
     actual = flt(actual_total_yield_kg)
@@ -298,3 +298,42 @@ def get_cycle_subscribers(cultivation_cycle, actual_total_yield_kg=0):
             y = flt(s.expected_yield_kg)
         out.append({"subscriber": s.subscriber, "cultivation_subscription": s.name, "yield_kg": y})
     return out
+
+
+def setup_fee_status(cs):
+    """Has this subscriber paid the setup fee for this crop?
+
+    A subscriber may have joined in one of two ways:
+      1. Directly on a Cultivation Subscription — the invoice is on that record.
+      2. Through a Programme Subscription (a batch) — ONE itemised invoice covers
+         every crop in the batch, so the per-crop record carries no invoice of its own.
+    Both must be recognised, otherwise batch subscribers are wrongly excluded.
+    Returns (qualifies, reason).
+    """
+    invoice = cs.get("setup_invoice") if isinstance(cs, dict) else cs.setup_invoice
+    source = "subscription"
+
+    if not invoice:
+        # look for the batch invoice via the programme subscription that created this row
+        parent = frappe.db.get_value("Programme Subscription Crop",
+            {"cultivation_subscription": cs.get("name") if isinstance(cs, dict) else cs.name},
+            "parent")
+        if parent:
+            invoice = frappe.db.get_value("Programme Subscription", parent, "setup_invoice")
+            source = "batch"
+
+    if not invoice:
+        return False, "no setup invoice raised yet"
+
+    inv = frappe.db.get_value("Sales Invoice", invoice,
+        ["docstatus", "outstanding_amount", "grand_total"], as_dict=True)
+    if not inv:
+        return False, "setup invoice not found"
+    if inv.docstatus == 0:
+        return False, f"{source} invoice {invoice} is still a draft — submit it"
+    if inv.docstatus == 2:
+        return False, f"{source} invoice {invoice} was cancelled"
+    if flt(inv.outstanding_amount) > 0.005:
+        return False, (f"{flt(inv.outstanding_amount):,.2f} still outstanding on "
+                       f"{source} invoice {invoice}")
+    return True, "paid"

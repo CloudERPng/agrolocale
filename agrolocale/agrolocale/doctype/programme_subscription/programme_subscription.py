@@ -116,6 +116,13 @@ class ProgrammeSubscription(Document):
                              "items": items})
         si.insert(ignore_permissions=True)
         self.db_set("setup_invoice", si.name)
+        # Show the batch invoice on each per-crop subscription too, so the record
+        # is self-explanatory and every check can see it.
+        for row in self.crop_allocations:
+            if row.cultivation_subscription:
+                frappe.db.set_value("Cultivation Subscription",
+                    row.cultivation_subscription, "setup_invoice", si.name,
+                    update_modified=False)
         frappe.msgprint(f"Draft setup invoice {si.name} created, itemised per crop. "
                         "Review and submit it before collecting the fee.", indicator="green")
 
