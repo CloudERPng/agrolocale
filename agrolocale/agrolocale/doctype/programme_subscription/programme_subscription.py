@@ -5,9 +5,21 @@ from agrolocale.utils import ensure_item
 
 
 class ProgrammeSubscription(Document):
+    OPEN_STATES = ("Open", "Cultivating")
+
     def validate(self):
+        self.check_programme_open()
         self.build_split()
         self.enforce_eligibility()
+
+    def check_programme_open(self):
+        """A batch stops accepting subscribers once it reaches harvest. Joining after
+        the crop is in the ground — let alone after settlement — would give a
+        subscriber a share of a harvest they did not fund."""
+        st = frappe.db.get_value("Cultivation Programme", self.cultivation_programme, "status")
+        if st and st not in self.OPEN_STATES:
+            frappe.throw(f"Batch {self.cultivation_programme} is <b>{st}</b> and is no longer "
+                         "accepting subscribers. Enrol this subscriber in the next batch.")
 
     def build_split(self):
         """Split the subscriber's units across the batch's crops using the crop mix,

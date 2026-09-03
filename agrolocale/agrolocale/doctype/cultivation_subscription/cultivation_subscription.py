@@ -6,8 +6,22 @@ from agrolocale.utils import ensure_item
 
 class CultivationSubscription(Document):
     def validate(self):
+        self.check_cycle_open()
         self.project_numbers()
         self.enforce_eligibility()
+
+    def check_cycle_open(self):
+        """No joining a crop that is already harvesting, settled or closed."""
+        if self.flags.get("from_programme"):
+            return
+        st = frappe.db.get_value("Cultivation Cycle", self.cultivation_cycle, "status")
+        if st and st not in ("Open", "Cultivating"):
+            frappe.throw(f"Cycle {self.cultivation_cycle} is <b>{st}</b> and is no longer "
+                         "accepting subscribers.")
+        if frappe.db.exists("Harvest Settlement",
+                {"cultivation_cycle": self.cultivation_cycle, "docstatus": 1}):
+            frappe.throw(f"Cycle {self.cultivation_cycle} has already been settled. "
+                         "A subscriber cannot join after the harvest has been shared.")
 
     def project_numbers(self):
         if not self.cultivation_cycle:

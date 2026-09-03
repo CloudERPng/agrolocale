@@ -20,7 +20,9 @@
   "total_plot_count",
   "land_value",
   "cb2",
+  "developmental_fee_per_plot",
   "developmental_fee",
+  "legal_documentation_fee_per_plot",
   "legal_documentation_fee",
   "total_contract_value",
   "sb3",
@@ -141,18 +143,32 @@
    "fieldtype": "Column Break"
   },
   {
+   "fieldname": "developmental_fee_per_plot",
+   "fieldtype": "Currency",
+   "label": "Developmental Fee / Plot",
+   "read_only": 1,
+   "description": "From the Estate Price Band."
+  },
+  {
    "fieldname": "developmental_fee",
    "fieldtype": "Currency",
-   "label": "Developmental Fee",
+   "label": "Developmental Fee (total)",
+   "read_only": 1,
+   "description": "Per-plot rate \u00d7 total plot count."
+  },
+  {
+   "fieldname": "legal_documentation_fee_per_plot",
+   "fieldtype": "Currency",
+   "label": "Legal Documentation Fee / Plot",
    "read_only": 1,
    "description": "From the Estate Price Band."
   },
   {
    "fieldname": "legal_documentation_fee",
    "fieldtype": "Currency",
-   "label": "Legal Documentation Fee",
+   "label": "Legal Documentation Fee (total)",
    "read_only": 1,
-   "description": "From the Estate Price Band."
+   "description": "Per-plot rate \u00d7 total plot count."
   },
   {
    "fieldname": "total_contract_value",

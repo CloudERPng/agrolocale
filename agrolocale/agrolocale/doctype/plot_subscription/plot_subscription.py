@@ -89,8 +89,8 @@ class PlotSubscription(Document):
         head = frappe.db.get_value("Estate Price Band",
             {"estate": self.estate, "payment_plan": self.payment_plan, "unit_type": "Plot"},
             ["developmental_fee", "legal_documentation_fee"], as_dict=True) or {}
-        self.developmental_fee = flt(head.get("developmental_fee"))
-        self.legal_documentation_fee = flt(head.get("legal_documentation_fee"))
+        self.developmental_fee_per_plot = flt(head.get("developmental_fee"))
+        self.legal_documentation_fee_per_plot = flt(head.get("legal_documentation_fee"))
 
     def compute_totals(self):
         self.apply_price_band()
@@ -105,6 +105,10 @@ class PlotSubscription(Document):
             land_value += u.line_total
         self.total_plot_count = total_plots
         self.land_value = land_value
+        # Development and documentation fees are charged per plot, so a buyer taking
+        # eight plots pays eight times the per-plot rate.
+        self.developmental_fee = flt(flt(self.developmental_fee_per_plot) * total_plots, 2)
+        self.legal_documentation_fee = flt(flt(self.legal_documentation_fee_per_plot) * total_plots, 2)
         self.total_contract_value = land_value + flt(self.developmental_fee) + flt(self.legal_documentation_fee)
 
     def before_submit(self):

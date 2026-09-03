@@ -46,8 +46,8 @@ class SubscriptionIntake(Document):
         head = frappe.db.get_value("Estate Price Band",
             {"estate": self.estate, "payment_plan": self.payment_plan, "unit_type": "Plot"},
             ["developmental_fee", "legal_documentation_fee"], as_dict=True) or {}
-        self.developmental_fee = flt(head.get("developmental_fee"))
-        self.legal_documentation_fee = flt(head.get("legal_documentation_fee"))
+        self.developmental_fee = flt(flt(head.get("developmental_fee")) * total_plots, 2)
+        self.legal_documentation_fee = flt(flt(head.get("legal_documentation_fee")) * total_plots, 2)
         self.land_value = flt(land_value, 2)
         self.total_plot_count = total_plots
         self.total_contract_value = flt(land_value + flt(self.developmental_fee)

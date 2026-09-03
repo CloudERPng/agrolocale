@@ -74,6 +74,11 @@ class CultivationProgramme(Document):
             if not (st in SETTLED_STATES or settled_doc):
                 all_done = False
         self.db_set("all_cycles_settled", 1 if all_done else 0)
+        if not all_done and self.status == "Open" and any(
+                frappe.db.exists("Harvest Settlement",
+                    {"cultivation_cycle": r.cultivation_cycle, "docstatus": 1})
+                for r in rows):
+            self.db_set("status", "Harvesting")
         if all_done and self.status not in ("Settled", "Closed"):
             self.db_set("status", "Harvesting")
         return all_done
@@ -214,7 +219,17 @@ class CultivationProgramme(Document):
                     "payout_status": "Settled" if outstanding <= 0.005 else "Partially Settled"})
 
         if not self.get_pending_payouts():
-            self.db_set("status", "Settled")
+            # Everyone has been paid or rolled over: the batch is finished and must
+            # not accept new subscribers.
+            self.db_set("status", "Closed")
+            for r in self.crop_mix:
+                if r.cultivation_cycle:
+                    st = frappe.db.get_value("Cultivation Cycle", r.cultivation_cycle, "status")
+                    if st not in ("Closed", "Closed \u2013 No Harvest"):
+                        frappe.db.set_value("Cultivation Cycle", r.cultivation_cycle,
+                                            "status", "Closed", update_modified=False)
+            frappe.msgprint("All subscribers settled — this batch is now Closed and will "
+                            "not accept new subscribers.", indicator="blue")
         bits = []
         if cash_lines:
             bits.append(f"paid {len(cash_lines)} subscriber(s) {total_cash:,.2f}"

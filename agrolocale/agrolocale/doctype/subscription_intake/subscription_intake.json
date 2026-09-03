@@ -150,7 +150,7 @@
   {
    "fieldname": "developmental_fee",
    "fieldtype": "Currency",
-   "label": "Developmental Fee",
+   "label": "Developmental Fee (total)",
    "read_only": 1
   },
   {
@@ -160,7 +160,7 @@
   {
    "fieldname": "legal_documentation_fee",
    "fieldtype": "Currency",
-   "label": "Legal Documentation Fee",
+   "label": "Legal Documentation Fee (total)",
    "read_only": 1
   },
   {
