@@ -1,6 +1,6 @@
 import frappe
 from frappe.model.document import Document
-from frappe.utils import flt
+from frappe.utils import flt, cint
 from agrolocale.utils import ensure_item
 
 
@@ -9,52 +9,68 @@ class ProgrammeSubscription(Document):
 
     def validate(self):
         self.check_programme_open()
-        self.build_split()
+        self.price_allocations()
         self.enforce_eligibility()
 
     def check_programme_open(self):
-        """A batch stops accepting subscribers once it reaches harvest. Joining after
-        the crop is in the ground — let alone after settlement — would give a
-        subscriber a share of a harvest they did not fund."""
         st = frappe.db.get_value("Cultivation Programme", self.cultivation_programme, "status")
         if st and st not in self.OPEN_STATES:
             frappe.throw(f"Batch {self.cultivation_programme} is <b>{st}</b> and is no longer "
                          "accepting subscribers. Enrol this subscriber in the next batch.")
 
-    def build_split(self):
-        """Split the subscriber's units across the batch's crops using the crop mix,
-        and price each crop at its own rate. The fee is the sum of the parts, never a
-        blended figure, so it survives a subscriber asking how it was calculated."""
+    def price_allocations(self):
+        """The subscriber chooses which crops they want and how many plots go to each.
+        They may take one crop, some, or all \u2014 and a plot is never split between
+        crops, so plots are whole numbers."""
         if not self.cultivation_programme:
             return
-        prog = frappe.get_doc("Cultivation Programme", self.cultivation_programme)
-        ppa = flt(frappe.db.get_value("Farm Estate", prog.farm, "plots_per_acre")) or 1
-        total_pe = flt(self.number_of_plots) + flt(self.number_of_acres) * ppa
-        self.total_plot_equivalents = flt(total_pe, 4)
+        if not self.crop_allocations:
+            frappe.throw("Add at least one crop \u2014 choose which crops this subscriber wants.")
 
-        self.set("crop_allocations", [])
-        total_fee = 0.0
-        for row in prog.crop_mix:
+        prog = frappe.get_doc("Cultivation Programme", self.cultivation_programme)
+        offered = {r.crop: r.cultivation_cycle for r in prog.crop_mix}
+        ppa = flt(frappe.db.get_value("Farm Estate", prog.farm, "plots_per_acre")) or 1
+
+        seen, total_pe, total_plots, total_acres, total_fee = set(), 0.0, 0, 0.0, 0.0
+        for row in self.crop_allocations:
+            if row.crop not in offered:
+                frappe.throw(f"{row.crop} is not part of batch {prog.programme_name}. "
+                             f"Available crops: {', '.join(offered) or 'none'}.")
+            if row.crop in seen:
+                frappe.throw(f"{row.crop} appears more than once. Use one row per crop.")
+            seen.add(row.crop)
+
+            if flt(row.number_of_plots) != cint(row.number_of_plots):
+                frappe.throw(f"{row.crop}: plots must be whole numbers \u2014 a plot cannot be "
+                             "split between crops.")
+            row.number_of_plots = cint(row.number_of_plots)
+            if row.number_of_plots < 0 or flt(row.number_of_acres) < 0:
+                frappe.throw(f"{row.crop}: quantities cannot be negative.")
+            if not row.number_of_plots and not flt(row.number_of_acres):
+                frappe.throw(f"{row.crop}: enter the number of plots or acres for this crop.")
+
+            row.cultivation_cycle = offered[row.crop]
+            pe = flt(row.number_of_plots) + flt(row.number_of_acres) * ppa
+            row.plot_equivalents = flt(pe, 4)
+
             c = frappe.db.get_value("Crop", row.crop, [
                 "setup_fee_per_plot", "setup_fee_per_acre",
                 "expected_yield_per_plot_kg", "expected_yield_per_acre_kg"], as_dict=True) or {}
-            pe = flt(total_pe * flt(row.share_pct) / 100, 4)
-            # price per plot-equivalent, using the acre rate divided by plots-per-acre
-            fee_per_pe = flt(c.get("setup_fee_per_plot"))
-            yld_per_pe = flt(c.get("expected_yield_per_plot_kg"))
-            if flt(self.number_of_acres) and flt(c.get("setup_fee_per_acre")) and ppa:
-                fee_per_pe = flt(c.get("setup_fee_per_acre")) / ppa
-                yld_per_pe = flt(c.get("expected_yield_per_acre_kg")) / ppa
-            fee = flt(pe * fee_per_pe, 2)
-            total_fee += fee
-            self.append("crop_allocations", {
-                "crop": row.crop,
-                "cultivation_cycle": row.cultivation_cycle,
-                "share_pct": row.share_pct,
-                "plot_equivalents": pe,
-                "setup_fee": fee,
-                "expected_yield_kg": flt(pe * yld_per_pe, 2),
-            })
+            row.setup_fee = flt(
+                flt(row.number_of_plots) * flt(c.get("setup_fee_per_plot"))
+                + flt(row.number_of_acres) * flt(c.get("setup_fee_per_acre")), 2)
+            row.expected_yield_kg = flt(
+                flt(row.number_of_plots) * flt(c.get("expected_yield_per_plot_kg"))
+                + flt(row.number_of_acres) * flt(c.get("expected_yield_per_acre_kg")), 2)
+
+            total_pe += pe
+            total_plots += cint(row.number_of_plots)
+            total_acres += flt(row.number_of_acres)
+            total_fee += flt(row.setup_fee)
+
+        self.number_of_plots = total_plots
+        self.number_of_acres = total_acres
+        self.total_plot_equivalents = flt(total_pe, 4)
         self.total_setup_fee = flt(total_fee, 2)
 
     def enforce_eligibility(self):
@@ -81,8 +97,6 @@ class ProgrammeSubscription(Document):
         self.update_programme_totals()
 
     def create_crop_subscriptions(self):
-        """The subscriber signs once for the batch; the per-crop subscriptions the
-        settlement machinery needs are generated behind the scenes."""
         for row in self.crop_allocations:
             if row.cultivation_subscription or not row.cultivation_cycle:
                 continue
@@ -91,8 +105,8 @@ class ProgrammeSubscription(Document):
                 "subscriber": self.subscriber,
                 "cultivation_cycle": row.cultivation_cycle,
                 "eligibility_subscription": self.eligibility_subscription,
-                "number_of_plots": flt(row.plot_equivalents),
-                "number_of_acres": 0,
+                "number_of_plots": flt(row.number_of_plots),
+                "number_of_acres": flt(row.number_of_acres),
                 "status": "Subscribed",
             })
             cs.flags.from_programme = True
@@ -103,8 +117,6 @@ class ProgrammeSubscription(Document):
             row.db_set("cultivation_subscription", cs.name)
 
     def create_setup_invoice(self):
-        """One itemised invoice for the batch \u2013 a line per crop, so the subscriber
-        can see exactly how the fee was built up."""
         if self.setup_invoice:
             return
         prog = frappe.db.get_value("Cultivation Programme", self.cultivation_programme,
@@ -113,14 +125,18 @@ class ProgrammeSubscription(Document):
         for row in self.crop_allocations:
             if flt(row.setup_fee) <= 0:
                 continue
-            cyc = frappe.db.get_value("Cultivation Cycle", row.cultivation_cycle,
+            project = frappe.db.get_value("Cultivation Cycle", row.cultivation_cycle,
                 "project") if row.cultivation_cycle else None
+            qty_desc = []
+            if cint(row.number_of_plots):
+                qty_desc.append(f"{cint(row.number_of_plots)} plot(s)")
+            if flt(row.number_of_acres):
+                qty_desc.append(f"{flt(row.number_of_acres):g} acre(s)")
             items.append({
                 "item_code": ensure_item(f"Cultivation Setup & Management - {row.crop}"),
                 "qty": 1, "rate": flt(row.setup_fee),
-                "description": f"{row.crop} \u2013 {flt(row.plot_equivalents):g} plot-equivalents "
-                               f"({flt(row.share_pct):g}% of batch)",
-                "project": cyc, "cost_center": prog.get("cost_center"),
+                "description": f"{row.crop} \u2013 " + ", ".join(qty_desc),
+                "project": project, "cost_center": prog.get("cost_center"),
             })
         if not items:
             return
@@ -128,8 +144,6 @@ class ProgrammeSubscription(Document):
                              "items": items})
         si.insert(ignore_permissions=True)
         self.db_set("setup_invoice", si.name)
-        # Show the batch invoice on each per-crop subscription too, so the record
-        # is self-explanatory and every check can see it.
         for row in self.crop_allocations:
             if row.cultivation_subscription:
                 frappe.db.set_value("Cultivation Subscription",

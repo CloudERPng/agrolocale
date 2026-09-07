@@ -24,7 +24,7 @@
    "fieldname": "unit_type",
    "fieldtype": "Select",
    "label": "Unit Type",
-   "options": "Plot\nAcre\n5 Acres\n10 Acres\nHectare",
+   "options": "Plot\nAcre\n5 Acres\n10 Acres",
    "reqd": 1,
    "in_list_view": 1
   },

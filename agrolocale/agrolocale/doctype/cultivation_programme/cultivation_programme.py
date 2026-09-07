@@ -7,11 +7,10 @@ SETTLED_STATES = ("Settled", "Closed", "Closed \u2013 No Harvest")
 
 class CultivationProgramme(Document):
     def validate(self):
-        total = flt(sum(flt(r.share_pct) for r in (self.crop_mix or [])))
         if not self.crop_mix:
-            frappe.throw("Add at least one crop to the Crop Mix.")
-        if abs(total - 100) > 0.01:
-            frappe.throw(f"The crop mix must total 100%. It currently totals {total:g}%.")
+            frappe.throw("Add at least one crop to this batch.")
+        # Shares are indicative only: subscribers choose which crops they want and how
+        # many whole plots go to each, so the mix does not have to total 100%.
         crops = [r.crop for r in self.crop_mix]
         if len(crops) != len(set(crops)):
             frappe.throw("Each crop may only appear once in the mix.")
@@ -42,8 +41,10 @@ class CultivationProgramme(Document):
                 "cultivation_start": self.cultivation_start,
                 "harvest_start": self.harvest_start,
                 "harvest_end": self.harvest_end,
-                "capacity_plots": flt(self.capacity_plots) * flt(row.share_pct) / 100,
-                "capacity_acres": flt(self.capacity_acres) * flt(row.share_pct) / 100,
+                "capacity_plots": (flt(self.capacity_plots) * flt(row.share_pct) / 100
+                                   if flt(row.share_pct) else flt(self.capacity_plots)),
+                "capacity_acres": (flt(self.capacity_acres) * flt(row.share_pct) / 100
+                                   if flt(row.share_pct) else flt(self.capacity_acres)),
                 "warehouse": self.warehouse,
                 "cost_center": self.cost_center,
                 "status": "Open",

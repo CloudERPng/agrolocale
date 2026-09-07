@@ -21,10 +21,10 @@
   {
    "fieldname": "share_pct",
    "fieldtype": "Percent",
-   "label": "Share %",
-   "reqd": 1,
+   "label": "Indicative Share % (optional)",
+   "reqd": 0,
    "in_list_view": 1,
-   "description": "Portion of each subscriber's units grown as this crop."
+   "description": "Planning guide only. Subscribers choose their own crops and plots."
   },
   {
    "fieldname": "cultivation_cycle",

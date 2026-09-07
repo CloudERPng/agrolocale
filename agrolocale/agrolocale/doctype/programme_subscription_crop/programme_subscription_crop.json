@@ -6,7 +6,8 @@
  "field_order": [
   "crop",
   "cultivation_cycle",
-  "share_pct",
+  "number_of_plots",
+  "number_of_acres",
   "plot_equivalents",
   "setup_fee",
   "expected_yield_kg",
@@ -18,44 +19,55 @@
    "fieldtype": "Link",
    "label": "Crop",
    "options": "Crop",
-   "read_only": 1,
-   "in_list_view": 1
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2
   },
   {
    "fieldname": "cultivation_cycle",
    "fieldtype": "Link",
-   "label": "Cultivation Cycle",
+   "label": "Cycle",
    "options": "Cultivation Cycle",
    "read_only": 1,
-   "in_list_view": 1
+   "in_list_view": 1,
+   "columns": 2
   },
   {
-   "fieldname": "share_pct",
-   "fieldtype": "Percent",
-   "label": "Share %",
-   "read_only": 1,
-   "in_list_view": 1
+   "fieldname": "number_of_plots",
+   "fieldtype": "Int",
+   "label": "Plots",
+   "in_list_view": 1,
+   "columns": 1,
+   "description": "Whole plots only \u2014 a plot cannot be split between crops."
+  },
+  {
+   "fieldname": "number_of_acres",
+   "fieldtype": "Float",
+   "label": "Acres",
+   "in_list_view": 1,
+   "columns": 1
   },
   {
    "fieldname": "plot_equivalents",
    "fieldtype": "Float",
-   "label": "Plot-Equivalents",
+   "label": "Plot-Equiv.",
    "read_only": 1,
-   "in_list_view": 1
+   "in_list_view": 1,
+   "columns": 1
   },
   {
    "fieldname": "setup_fee",
    "fieldtype": "Currency",
    "label": "Setup Fee",
    "read_only": 1,
-   "in_list_view": 1
+   "in_list_view": 1,
+   "columns": 2
   },
   {
    "fieldname": "expected_yield_kg",
    "fieldtype": "Float",
    "label": "Expected Yield",
-   "read_only": 1,
-   "in_list_view": 1
+   "read_only": 1
   },
   {
    "fieldname": "cultivation_subscription",
@@ -63,7 +75,6 @@
    "label": "Cultivation Subscription",
    "options": "Cultivation Subscription",
    "read_only": 1,
-   "in_list_view": 1,
    "allow_on_submit": 1
   }
  ],

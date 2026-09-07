@@ -67,13 +67,17 @@
    "fieldname": "number_of_plots",
    "fieldtype": "Float",
    "label": "Number of Plots",
-   "default": "0"
+   "default": "0",
+   "read_only": 1,
+   "description": "Total across the crops chosen below."
   },
   {
    "fieldname": "number_of_acres",
    "fieldtype": "Float",
    "label": "Number of Acres",
-   "default": "0"
+   "default": "0",
+   "read_only": 1,
+   "description": "Total across the crops chosen below."
   },
   {
    "fieldname": "total_plot_equivalents",
@@ -83,14 +87,16 @@
   },
   {
    "fieldname": "sb_split",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Crop selection \u2013 subscriber chooses which crops and how many plots"
   },
   {
    "fieldname": "crop_allocations",
    "fieldtype": "Table",
-   "label": "Crop Allocations",
+   "label": "Crops chosen",
    "options": "Programme Subscription Crop",
-   "read_only": 1
+   "reqd": 1,
+   "description": "Add a row per crop the subscriber wants. Whole plots only."
   },
   {
    "fieldname": "sb_tot",
