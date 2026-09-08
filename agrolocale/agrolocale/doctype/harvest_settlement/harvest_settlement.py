@@ -249,9 +249,30 @@ class HarvestSettlement(Document):
         if credits_made:
             bits.append(f"created {len(credits_made)} cultivation credit(s) totalling "
                         f"{sum(flt(x) for _, x in credits_made):,.2f}")
+        self.release_if_complete()
         frappe.msgprint("Settlement complete — " + "; ".join(bits) + ".",
                         indicator="green", title="Payouts settled")
         return True
+
+    def release_if_complete(self):
+        """Once every subscriber on a standalone cycle has been settled, release their
+        entitlement so they can commit the same land to a new cycle. Cycles that
+        belong to a batch are released by the batch instead, when it closes."""
+        if any(a.payout_status != "Settled" for a in self.allocations):
+            return
+        cyc = frappe.db.get_value("Cultivation Cycle", self.cultivation_cycle,
+            ["cultivation_programme", "status"], as_dict=True) or {}
+        if cyc.get("cultivation_programme"):
+            return
+        for cs in frappe.get_all("Cultivation Subscription",
+                filters={"cultivation_cycle": self.cultivation_cycle, "docstatus": 1,
+                         "status": ["in", ["Subscribed", "Cultivating", "Harvested"]]},
+                fields=["name"]):
+            frappe.db.set_value("Cultivation Subscription", cs.name, "status", "Settled",
+                                update_modified=False)
+        if cyc.get("status") not in ("Closed", "Closed \u2013 No Harvest"):
+            frappe.db.set_value("Cultivation Cycle", self.cultivation_cycle, "status",
+                                "Settled", update_modified=False)
 
 def get_settings():
     try:

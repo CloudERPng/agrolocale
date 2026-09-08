@@ -229,8 +229,36 @@ class CultivationProgramme(Document):
                     if st not in ("Closed", "Closed \u2013 No Harvest"):
                         frappe.db.set_value("Cultivation Cycle", r.cultivation_cycle,
                                             "status", "Closed", update_modified=False)
-            frappe.msgprint("All subscribers settled — this batch is now Closed and will "
-                            "not accept new subscribers.", indicator="blue")
+            freed = self.release_subscriptions()
+            frappe.msgprint(
+                "All subscribers settled — this batch is now Closed and will not accept "
+                f"new subscribers.<br>{freed} subscription(s) released, so subscribers can "
+                "commit their land to a new batch.", indicator="blue")
+
+    def release_subscriptions(self):
+        """Closing a batch frees each subscriber's ENTITLEMENT — the capacity to
+        commit their plot-equivalents to a new batch. Their land ownership is
+        untouched: the plots remain allocated to them. Without this the entitlement
+        cap would treat a finished batch as still running and block them from ever
+        planting again on land they own."""
+        count = 0
+        for ps in frappe.get_all("Programme Subscription",
+                filters={"cultivation_programme": self.name, "docstatus": 1,
+                         "status": ["in", ["Subscribed", "Cultivating", "Harvested"]]},
+                fields=["name"]):
+            frappe.db.set_value("Programme Subscription", ps.name, "status", "Settled",
+                                update_modified=False)
+            count += 1
+        for r in self.crop_mix:
+            if not r.cultivation_cycle:
+                continue
+            for cs in frappe.get_all("Cultivation Subscription",
+                    filters={"cultivation_cycle": r.cultivation_cycle, "docstatus": 1,
+                             "status": ["in", ["Subscribed", "Cultivating", "Harvested"]]},
+                    fields=["name"]):
+                frappe.db.set_value("Cultivation Subscription", cs.name, "status", "Settled",
+                                    update_modified=False)
+        return count
         bits = []
         if cash_lines:
             bits.append(f"paid {len(cash_lines)} subscriber(s) {total_cash:,.2f}"
