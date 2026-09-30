@@ -40,7 +40,7 @@ frappe.ui.form.on('Subscription Intake', {
 function intro_for(s) {
   return {
     'Draft': 'Sales stage \u2014 capture the subscriber and what they are buying, then hand to Customer Care.',
-    'With Customer Care': 'Customer Care \u2014 attach all five documents (form, signed FAQ, ID, passport photo, consent form), check the details, then send to Accounts.',
+    'With Customer Care': 'Customer Care \u2014 attach all five documents (form & signed FAQ, payment evidence, ID, passport photo, consent form), check the details, then send to Accounts.',
     'With Accounts': 'Accounts \u2014 verified by Customer Care. Process to create the customer and subscription.',
     'Processed': 'Processed \u2014 subscription created. Accounts: review and submit it, then use Receive Payment on the subscription.',
     'Returned to Sales': 'Returned \u2014 see the Return Reason, correct it, then restart the review.',

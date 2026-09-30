@@ -4,8 +4,8 @@ from frappe.utils import flt
 
 
 REQUIRED_DOCS = [
-    ("subscription_form", "Subscription Form"),
-    ("faq_signed", "Signed FAQ"),
+    ("subscription_form", "Subscription Form & Signed FAQ"),
+    ("payment_evidence", "Payment Evidence"),
     ("id_document", "Means of Identification"),
     ("passport_photo", "Passport Photo"),
     ("consent_form", "Signed Consent Form"),

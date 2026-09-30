@@ -29,6 +29,7 @@
   "total_contract_value",
   "sb3",
   "subscription_form",
+  "payment_evidence",
   "faq_signed",
   "cb3",
   "id_document",
@@ -184,12 +185,21 @@
   {
    "fieldname": "subscription_form",
    "fieldtype": "Attach",
-   "label": "Subscription Form (scan)"
+   "label": "Subscription Form & Signed FAQ (scan)",
+   "description": "Upload the subscription form and the signed FAQ together as one document."
+  },
+  {
+   "fieldname": "payment_evidence",
+   "fieldtype": "Attach",
+   "label": "Payment Evidence",
+   "description": "Proof of the payment made at signing \u2014 teller, transfer receipt or POS slip. Accounts verify and post the payment."
   },
   {
    "fieldname": "faq_signed",
    "fieldtype": "Attach",
-   "label": "Signed FAQ"
+   "label": "Signed FAQ (legacy \u2014 now merged into the form above)",
+   "read_only": 1,
+   "depends_on": "eval:!!doc.faq_signed"
   },
   {
    "fieldname": "cb3",
