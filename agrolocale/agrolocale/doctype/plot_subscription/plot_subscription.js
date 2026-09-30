@@ -53,17 +53,11 @@ frappe.ui.form.on('Sold Units', {
 });
 
 function refresh_all(frm) {
+  // Fees are NOT fetched here. Each sold unit carries its own developmental and
+  // legal documentation fee on its Estate Price Band row, so the totals are
+  // calculated on the server when the document is saved. Setting them from the
+  // browser previously forced every sale onto the Plot band's rate.
   (frm.doc.sold_units || []).forEach(r => fetch_rate(frm, r.doctype, r.name));
-  if (frm.doc.estate && frm.doc.payment_plan) {
-    frappe.db.get_value('Estate Price Band',
-      { estate: frm.doc.estate, payment_plan: frm.doc.payment_plan, unit_type: 'Plot' },
-      ['developmental_fee', 'legal_documentation_fee']).then(r => {
-        if (r.message) {
-          frm.set_value('developmental_fee', r.message.developmental_fee);
-          frm.set_value('legal_documentation_fee', r.message.legal_documentation_fee);
-        }
-      });
-  }
 }
 
 function fetch_rate(frm, cdt, cdn) {
@@ -93,7 +87,32 @@ function recompute(frm) {
     });
     frm.set_value('total_plot_count', count);
     frm.set_value('land_value', value);
-    frm.set_value('total_contract_value',
-      value + (frm.doc.developmental_fee || 0) + (frm.doc.legal_documentation_fee || 0));
+    estimate_fees(frm, value);
+  });
+}
+
+// Preview the fees the server will calculate: each unit's own band row x its qty.
+function estimate_fees(frm, land_value) {
+  const rows = frm.doc.sold_units || [];
+  if (!rows.length || !frm.doc.estate || !frm.doc.payment_plan) {
+    frm.set_value('developmental_fee', 0);
+    frm.set_value('legal_documentation_fee', 0);
+    frm.set_value('total_contract_value', land_value || 0);
+    return;
+  }
+  const calls = rows.map(row => frappe.db.get_value('Estate Price Band',
+    { estate: frm.doc.estate, payment_plan: frm.doc.payment_plan, unit_type: row.unit_type },
+    ['developmental_fee', 'legal_documentation_fee'])
+    .then(r => ({ qty: row.qty || 0, band: (r && r.message) || {} })));
+
+  Promise.all(calls).then(results => {
+    let dev = 0, legal = 0;
+    results.forEach(x => {
+      dev += (x.band.developmental_fee || 0) * x.qty;
+      legal += (x.band.legal_documentation_fee || 0) * x.qty;
+    });
+    frm.set_value('developmental_fee', dev);
+    frm.set_value('legal_documentation_fee', legal);
+    frm.set_value('total_contract_value', (land_value || 0) + dev + legal);
   });
 }
