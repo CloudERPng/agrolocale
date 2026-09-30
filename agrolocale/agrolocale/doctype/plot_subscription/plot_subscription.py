@@ -74,23 +74,30 @@ class PlotSubscription(Document):
         return True
 
     def apply_price_band(self):
-        """Rates and fees are always taken from the Estate Price Band so they cannot
-        be edited on the form. Blank the estate/plan to price manually is not allowed."""
+        """Rates AND fees come from each sold unit's own Estate Price Band row, so an
+        acre is charged the acre's fees rather than the plot's fee multiplied up.
+        Each row's fees are multiplied by that row's quantity: 2 plots charge twice
+        the plot fee, 1 acre charges the acre fee once."""
         if not self.estate or not self.payment_plan:
             return
+        dev_total = legal_total = 0.0
         for u in (self.sold_units or []):
             band = frappe.db.get_value("Estate Price Band",
                 {"estate": self.estate, "payment_plan": self.payment_plan,
-                 "unit_type": u.unit_type}, "price")
-            if band is None:
-                frappe.throw(f"No Estate Price Band for {self.estate} – {u.unit_type} – "
-                             f"{self.payment_plan}. Add the price band row first.")
-            u.rate = flt(band) * (1.2 if (u.is_corner_piece and u.unit_type == "Plot") else 1.0)
-        head = frappe.db.get_value("Estate Price Band",
+                 "unit_type": u.unit_type},
+                ["price", "developmental_fee", "legal_documentation_fee"], as_dict=True)
+            if not band:
+                frappe.throw(f"No Estate Price Band for {self.estate} \u2013 {u.unit_type} "
+                             f"\u2013 {self.payment_plan}. Add the price band row first.")
+            u.rate = flt(band.price) * (1.2 if (u.is_corner_piece and u.unit_type == "Plot") else 1.0)
+            dev_total += flt(band.developmental_fee) * flt(u.qty)
+            legal_total += flt(band.legal_documentation_fee) * flt(u.qty)
+        self._fee_totals = (flt(dev_total, 2), flt(legal_total, 2))
+        plot_band = frappe.db.get_value("Estate Price Band",
             {"estate": self.estate, "payment_plan": self.payment_plan, "unit_type": "Plot"},
             ["developmental_fee", "legal_documentation_fee"], as_dict=True) or {}
-        self.developmental_fee_per_plot = flt(head.get("developmental_fee"))
-        self.legal_documentation_fee_per_plot = flt(head.get("legal_documentation_fee"))
+        self.developmental_fee_per_plot = flt(plot_band.get("developmental_fee"))
+        self.legal_documentation_fee_per_plot = flt(plot_band.get("legal_documentation_fee"))
 
     def compute_totals(self):
         self.apply_price_band()
@@ -105,10 +112,9 @@ class PlotSubscription(Document):
             land_value += u.line_total
         self.total_plot_count = total_plots
         self.land_value = land_value
-        # Development and documentation fees are charged per plot, so a buyer taking
-        # eight plots pays eight times the per-plot rate.
-        self.developmental_fee = flt(flt(self.developmental_fee_per_plot) * total_plots, 2)
-        self.legal_documentation_fee = flt(flt(self.legal_documentation_fee_per_plot) * total_plots, 2)
+        dev, legal = getattr(self, "_fee_totals", (0.0, 0.0))
+        self.developmental_fee = flt(dev, 2)
+        self.legal_documentation_fee = flt(legal, 2)
         self.total_contract_value = land_value + flt(self.developmental_fee) + flt(self.legal_documentation_fee)
 
     def before_submit(self):

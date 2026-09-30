@@ -27,6 +27,7 @@ class SubscriptionIntake(Document):
         mult = {"Plot": 1, "Acre": ppa, "5 Acres": 5 * ppa, "10 Acres": 10 * ppa}
 
         total_plots, land_value = 0, 0.0
+        dev_total = legal_total = 0.0
         for u in (self.sold_units or []):
             band = frappe.db.get_value("Estate Price Band",
                 {"estate": self.estate, "payment_plan": self.payment_plan,
@@ -41,13 +42,16 @@ class SubscriptionIntake(Document):
             u.plot_count = int(flt(u.qty) * mult.get(u.unit_type, 1))
             total_plots += u.plot_count
             land_value += u.line_total
+            # Fees follow the unit actually sold: an acre is charged the acre's fees.
+            dev_total += flt(band.developmental_fee) * flt(u.qty)
+            legal_total += flt(band.legal_documentation_fee) * flt(u.qty)
 
         # Header fees follow the Plot band for the chosen plan
         head = frappe.db.get_value("Estate Price Band",
             {"estate": self.estate, "payment_plan": self.payment_plan, "unit_type": "Plot"},
             ["developmental_fee", "legal_documentation_fee"], as_dict=True) or {}
-        self.developmental_fee = flt(flt(head.get("developmental_fee")) * total_plots, 2)
-        self.legal_documentation_fee = flt(flt(head.get("legal_documentation_fee")) * total_plots, 2)
+        self.developmental_fee = flt(dev_total, 2)
+        self.legal_documentation_fee = flt(legal_total, 2)
         self.land_value = flt(land_value, 2)
         self.total_plot_count = total_plots
         self.total_contract_value = flt(land_value + flt(self.developmental_fee)
