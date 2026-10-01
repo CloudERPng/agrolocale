@@ -36,6 +36,10 @@ def recompute_subscription(sub_name):
 
     so = frappe.db.get_value("Sales Order", sub.sales_order,
         ["advance_paid", "rounded_total", "grand_total"], as_dict=True)
+    if not so:
+        # The order was deleted. Leave the schedule untouched rather than crashing
+        # the nightly job or the payment that triggered this.
+        return
     paid = flt(so.advance_paid)
     total = flt(so.rounded_total) or flt(so.grand_total)
     today = getdate(nowdate())

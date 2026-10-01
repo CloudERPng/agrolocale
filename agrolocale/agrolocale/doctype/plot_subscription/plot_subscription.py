@@ -175,12 +175,35 @@ class PlotSubscription(Document):
 
     @frappe.whitelist()
     def get_so_outstanding(self):
+        """Outstanding on the linked Sales Order. Returns 0 when there is no usable
+        order - the link may be blank, or point at an order that has since been
+        deleted or cancelled. This runs when the form opens, so it must never raise."""
         if not self.sales_order:
             return 0
         so = frappe.db.get_value("Sales Order", self.sales_order,
-            ["advance_paid", "rounded_total", "grand_total"], as_dict=True)
+            ["advance_paid", "rounded_total", "grand_total", "docstatus"], as_dict=True)
+        if not so or so.docstatus != 1:
+            return 0
         total = flt(so.rounded_total) or flt(so.grand_total)
         return flt(total - flt(so.advance_paid), 2)
+
+    @frappe.whitelist()
+    def sales_order_status(self):
+        """Tells the form whether the linked order is usable, so it can warn instead
+        of offering a payment button that cannot work."""
+        if not self.sales_order:
+            return {"ok": False, "reason": "No Sales Order is linked to this subscription."}
+        so = frappe.db.get_value("Sales Order", self.sales_order, ["docstatus"], as_dict=True)
+        if not so:
+            return {"ok": False, "reason": f"Sales Order {self.sales_order} no longer exists - it "
+                    "appears to have been deleted. Payments cannot be recorded against this "
+                    "subscription until the order is restored, or the subscription is cancelled "
+                    "and raised again."}
+        if so.docstatus == 2:
+            return {"ok": False, "reason": f"Sales Order {self.sales_order} has been cancelled."}
+        if so.docstatus == 0:
+            return {"ok": False, "reason": f"Sales Order {self.sales_order} is still a draft."}
+        return {"ok": True, "reason": ""}
 
     @frappe.whitelist()
     def receive_payment(self, amount, mode_of_payment, posting_date=None, reference_no=None):
@@ -191,6 +214,9 @@ class PlotSubscription(Document):
 
         if self.docstatus != 1 or not self.sales_order:
             frappe.throw("Submit the subscription first — payments are recorded against its Sales Order.")
+        status = self.sales_order_status()
+        if not status.get("ok"):
+            frappe.throw(status.get("reason"))
         amount = flt(amount)
         if amount <= 0:
             frappe.throw("Enter an amount greater than zero.")

@@ -2,6 +2,11 @@ frappe.ui.form.on('Plot Subscription', {
   refresh(frm) {
     if (frm.doc.docstatus === 1 && frm.doc.sales_order &&
         frm.doc.subscription_status !== 'Allocated') {
+      frm.call('sales_order_status').then((s) => {
+        if (s.message && !s.message.ok) {
+          frm.set_intro(s.message.reason, 'red');
+          return;
+        }
       frm.call('get_so_outstanding').then((r) => {
         const out = r.message || 0;
         if (out > 0) {
@@ -31,6 +36,7 @@ frappe.ui.form.on('Plot Subscription', {
             d.show();
           }).addClass('btn-primary');
         }
+      });
       });
     }
     if (frm.doc.docstatus === 0) {
