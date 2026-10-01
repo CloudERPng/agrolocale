@@ -8,6 +8,10 @@ REQUIRED_DOCS = [
     ("payment_evidence", "Payment Evidence"),
     ("id_document", "Means of Identification"),
     ("passport_photo", "Passport Photo"),
+]
+
+# Attached when available, but never blocks the file from reaching Accounts.
+OPTIONAL_DOCS = [
     ("consent_form", "Signed Consent Form"),
 ]
 

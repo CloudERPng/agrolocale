@@ -180,7 +180,7 @@
   {
    "fieldname": "sb3",
    "fieldtype": "Section Break",
-   "label": "Documents \u2013 all five required (Customer Care checklist)"
+   "label": "Documents \u2013 four required (Customer Care checklist)"
   },
   {
    "fieldname": "subscription_form",
@@ -218,8 +218,8 @@
   {
    "fieldname": "consent_form",
    "fieldtype": "Attach",
-   "label": "Signed Consent Form",
-   "description": "Cultivation consent clauses, signed by the subscriber."
+   "label": "Signed Consent Form (optional)",
+   "description": "Attach when the subscriber has signed it. Not required to send the file to Accounts."
   },
   {
    "fieldname": "sb5",
