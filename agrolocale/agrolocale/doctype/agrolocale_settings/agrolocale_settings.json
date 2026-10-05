@@ -19,7 +19,9 @@
   "cb_ic",
   "intercompany_supplier",
   "intercompany_payable_account",
-  "offtaker_receivable_account"
+  "offtaker_receivable_account",
+  "create_purchase_invoice_in_payout_company",
+  "payout_company_warehouse"
  ],
  "fields": [
   {
@@ -121,6 +123,22 @@
    "options": "Account",
    "depends_on": "payouts_via_sister_company",
    "description": "Debtors account carrying what the off-taker owes for harvest. Left blank, the harvest invoice's own receivable account is used."
+  },
+  {
+   "fieldname": "create_purchase_invoice_in_payout_company",
+   "fieldtype": "Check",
+   "label": "Raise the matching purchase invoice in the payout company",
+   "default": "1",
+   "depends_on": "payouts_via_sister_company",
+   "description": "Creates the purchase side automatically, so the payout company carries the payable and the subscriber payouts can be set against it."
+  },
+  {
+   "fieldname": "payout_company_warehouse",
+   "fieldtype": "Link",
+   "label": "Receiving Warehouse (payout company)",
+   "options": "Warehouse",
+   "depends_on": "create_purchase_invoice_in_payout_company",
+   "description": "Optional. Set this to bring the harvest into the payout company's stock. Leave blank to record the purchase without any inventory movement."
   }
  ],
  "links": [],

@@ -19,7 +19,8 @@
   "sb3",
   "revenue_journal_entry",
   "payout_journal_entry",
-  "off_taker_invoice"
+  "off_taker_invoice",
+  "offtaker_purchase_invoice"
  ],
  "fields": [
   {
@@ -113,6 +114,13 @@
    "fieldtype": "Link",
    "label": "Off-taker Sales Invoice",
    "options": "Sales Invoice",
+   "read_only": 1
+  },
+  {
+   "fieldname": "offtaker_purchase_invoice",
+   "fieldtype": "Link",
+   "label": "Purchase Invoice (payout company)",
+   "options": "Purchase Invoice",
    "read_only": 1
   }
  ],

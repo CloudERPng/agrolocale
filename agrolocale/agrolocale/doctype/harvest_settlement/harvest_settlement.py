@@ -109,6 +109,7 @@ class HarvestSettlement(Document):
         si.insert(ignore_permissions=True)
         si.submit()
         self.db_set("off_taker_invoice", si.name)
+        self.create_intercompany_purchase_invoice(s, si)
 
         # Reclass the subscribers' share out of income into the payable.
         je = frappe.get_doc({
@@ -253,6 +254,65 @@ class HarvestSettlement(Document):
         if cyc.get("status") not in ("Closed", "Closed \u2013 No Harvest"):
             frappe.db.set_value("Cultivation Cycle", self.cultivation_cycle, "status",
                                 "Settled", update_modified=False)
+
+    def create_intercompany_purchase_invoice(self, s, si):
+        """The mirror of the harvest sale, in the payout company's books.
+
+        Without this the payout company has no payable to this company, so the
+        subscriber payouts have nothing to be set against and the harvest never
+        reaches its stock. Created and submitted automatically so the two sets of
+        books agree without anyone keying a second document."""
+        if not s.get("payouts_via_sister_company"):
+            return
+        if not s.get("create_purchase_invoice_in_payout_company"):
+            return
+        if self.offtaker_purchase_invoice:
+            return
+        supplier = s.get("intercompany_supplier")
+        payout_company = s.get("payout_company")
+        if not supplier or not payout_company:
+            frappe.msgprint("Cannot raise the purchase invoice in the payout company \u2014 "
+                            "set the supplier and payout company in Agrolocale Settings.",
+                            indicator="orange")
+            return
+        try:
+            from agrolocale.utils import ensure_item
+            warehouse = s.get("payout_company_warehouse")
+            crop = frappe.db.get_value("Cultivation Cycle", self.cultivation_cycle, "crop")
+            item = ensure_item(f"Harvest Sale - {crop}", is_stock=bool(warehouse))
+            row = {
+                "item_code": item,
+                "qty": flt(self.actual_total_yield_kg) or 1,
+                "rate": (flt(self.actual_sale_price_per_kg)
+                         if flt(self.actual_total_yield_kg) else flt(self.gross_revenue)),
+            }
+            if warehouse:
+                row["warehouse"] = warehouse
+            pi = frappe.get_doc({
+                "doctype": "Purchase Invoice",
+                "supplier": supplier,
+                "company": payout_company,
+                "posting_date": nowdate(),
+                "bill_no": si.name,
+                "update_stock": 1 if warehouse else 0,
+                "credit_to": s.get("intercompany_payable_account"),
+                "remarks": f"Harvest purchased from {s.get('company')} \u2014 settlement {self.name}",
+                "items": [row],
+            })
+            pi.insert(ignore_permissions=True)
+            pi.submit()
+            self.db_set("offtaker_purchase_invoice", pi.name)
+            frappe.msgprint(f"Purchase invoice {pi.name} raised in {payout_company}"
+                            + (f" and {flt(self.actual_total_yield_kg):,.0f}kg received into "
+                               f"{warehouse}." if warehouse else "."),
+                            indicator="green")
+        except Exception:
+            frappe.log_error(frappe.get_traceback(),
+                             "Agrolocale: inter-company purchase invoice failed")
+            frappe.msgprint("The harvest was invoiced, but the matching purchase invoice in "
+                            "the payout company could not be created. Raise it manually and "
+                            "check the error log.", indicator="orange")
+
 
 def get_settings():
     try:

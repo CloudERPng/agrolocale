@@ -1,8 +1,11 @@
 import frappe
 
 
-def ensure_item(item_name):
-    """Return a non-stock service Item, creating it on first use."""
+def ensure_item(item_name, is_stock=False):
+    """Return an Item, creating it on first use.
+
+    Service and land items are non-stock. Harvest bought into a sister company's
+    warehouse must be a stock item, so pass is_stock=True for those."""
     if frappe.db.exists("Item", item_name):
         return item_name
     group = (frappe.db.get_value("Item Group", {"item_group_name": "Services"})
@@ -15,7 +18,7 @@ def ensure_item(item_name):
         "item_name": item_name,
         "item_group": group,
         "stock_uom": uom,
-        "is_stock_item": 0,
+        "is_stock_item": 1 if is_stock else 0,
         "is_sales_item": 1,
         "is_purchase_item": 1,
     }).insert(ignore_permissions=True)
@@ -103,16 +106,42 @@ def post_subscriber_payouts(cash_lines, total_cash, settings, posting_date, narr
 
     # 1. the sister company actually moves the money, and in doing so reduces what it
     #    owes this company for the harvest it bought.
+    # Set the payment against the outstanding purchase invoices, oldest first, so it
+    # visibly knocks them down instead of sitting as an unallocated debit.
+    debit_rows, remaining = [], flt(total_cash, 2)
+    open_pis = frappe.db.sql("""
+        select name, outstanding_amount
+        from `tabPurchase Invoice`
+        where docstatus = 1 and supplier = %s and company = %s
+          and outstanding_amount > 0
+        order by posting_date asc, name asc
+    """, (ic_supplier, payout_company), as_dict=True)
+    for pi in open_pis:
+        if remaining <= 0.005:
+            break
+        take = min(flt(pi.outstanding_amount), remaining)
+        debit_rows.append({
+            "account": ic_payable, "party_type": "Supplier", "party": ic_supplier,
+            "debit_in_account_currency": flt(take, 2),
+            "reference_type": "Purchase Invoice", "reference_name": pi.name,
+            "user_remark": f"{remark_prefix} set against {pi.name}",
+        })
+        remaining = flt(remaining - take, 2)
+    if remaining > 0.005:
+        # more paid out than has been invoiced - record the excess on account
+        debit_rows.append({
+            "account": ic_payable, "party_type": "Supplier", "party": ic_supplier,
+            "debit_in_account_currency": flt(remaining, 2),
+            "user_remark": f"{remark_prefix} - on account (exceeds invoiced harvest)",
+        })
+
     je_pay = frappe.get_doc({
         "doctype": "Journal Entry", "voucher_type": "Bank Entry",
         "posting_date": pdate, "company": payout_company,
         "cheque_no": ref, "cheque_date": pdate,
         "mode_of_payment": mode_of_payment,
         "user_remark": f"{ref} - paid on behalf of {s.get('company')}",
-        "accounts": [
-            {"account": ic_payable, "party_type": "Supplier", "party": ic_supplier,
-             "debit_in_account_currency": flt(total_cash, 2),
-             "user_remark": f"{remark_prefix} settled on behalf of {s.get('company')}"},
+        "accounts": debit_rows + [
             {"account": bank, "credit_in_account_currency": flt(total_cash, 2)},
         ],
     })
@@ -138,11 +167,16 @@ def post_subscriber_payouts(cash_lines, total_cash, settings, posting_date, narr
         "debit_in_account_currency": flt(amt, 2),
         "user_remark": f"{remark_prefix} to {sub} (paid by {payout_company})",
     } for sub, amt in cash_lines]
-    accounts.append({
+    credit_row = {
         "account": receivable, "party_type": "Customer", "party": offtaker,
         "credit_in_account_currency": flt(total_cash, 2),
         "user_remark": f"Offset against harvest sold to {offtaker}",
-    })
+    }
+    if offtaker_invoice:
+        # tie it to the harvest invoice so the receivable is reduced against it
+        credit_row["reference_type"] = "Sales Invoice"
+        credit_row["reference_name"] = offtaker_invoice
+    accounts.append(credit_row)
     je_ic = frappe.get_doc({
         "doctype": "Journal Entry", "voucher_type": "Journal Entry",
         "posting_date": pdate, "company": s.get("company"),
