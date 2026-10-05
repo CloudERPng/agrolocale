@@ -158,37 +158,24 @@ class CultivationProgramme(Document):
 
         je_name = None
         if cash_lines:
-            if not mode_of_payment:
+            if not mode_of_payment and not s.get("payouts_via_sister_company"):
                 frappe.throw("Choose a Mode of Payment for the cash portion.")
-            missing = _missing_accounts(s, ["subscriber_harvest_payable_account"])
-            if missing:
-                frappe.throw("Set these in Agrolocale Settings first: " + ", ".join(missing))
-            from agrolocale.utils import get_mode_of_payment_account
-            pay_account = (get_mode_of_payment_account(mode_of_payment, s.get("company"))
-                           or (s or {}).get("harvest_proceeds_account"))
-            if not pay_account:
-                frappe.throw(f"Mode of Payment {mode_of_payment} has no default account, and "
-                             "no fallback Harvest Proceeds Account is set.")
-            accounts = [{
-                "account": s["subscriber_harvest_payable_account"],
-                "party_type": "Customer", "party": sub,
-                "debit_in_account_currency": flt(amt, 2),
-                "user_remark": f"Batch payout to {sub} \u2013 {self.programme_name}",
-            } for sub, amt in cash_lines]
-            accounts.append({"account": pay_account,
-                             "credit_in_account_currency": flt(total_cash, 2)})
-            pdate = posting_date or nowdate()
-            je = frappe.get_doc({
-                "doctype": "Journal Entry", "voucher_type": "Bank Entry",
-                "posting_date": pdate, "company": s.get("company"),
-                "cheque_no": narration or f"Batch payout \u2013 {self.programme_name}",
-                "cheque_date": pdate, "mode_of_payment": mode_of_payment,
-                "user_remark": narration or f"Consolidated batch payouts for {self.name}",
-                "accounts": accounts,
-            })
-            je.insert(ignore_permissions=True)
-            je.submit()
-            je_name = je.name
+            # The off-taker is taken from the batch's settlements \u2014 they are all sold
+            # to the same buyer, so the inter-company offset has a party to post against.
+            cycles = [r.cultivation_cycle for r in self.crop_mix if r.cultivation_cycle]
+            hs = frappe.db.get_value("Harvest Settlement",
+                {"cultivation_cycle": ["in", cycles], "docstatus": 1},
+                ["off_taker", "off_taker_invoice"], as_dict=True) if cycles else None
+            from agrolocale.utils import post_subscriber_payouts
+            jes = post_subscriber_payouts(
+                cash_lines=cash_lines, total_cash=flt(total_cash, 2), settings=s,
+                posting_date=posting_date or nowdate(),
+                narration=narration or f"Batch payout \u2013 {self.programme_name}",
+                mode_of_payment=mode_of_payment,
+                offtaker=(hs or {}).get("off_taker"),
+                offtaker_invoice=(hs or {}).get("off_taker_invoice"),
+                remark_prefix=f"Batch payout \u2013 {self.programme_name}")
+            je_name = jes[0] if jes else None
 
         for sub, amt in credits:
             cr = frappe.get_doc({

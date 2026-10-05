@@ -11,7 +11,15 @@
   "sb2",
   "harvest_proceeds_account",
   "subscriber_harvest_payable_account",
-  "cultivation_commission_income_account"
+  "cultivation_commission_income_account",
+  "sb_ic",
+  "payouts_via_sister_company",
+  "payout_company",
+  "payout_bank_account",
+  "cb_ic",
+  "intercompany_supplier",
+  "intercompany_payable_account",
+  "offtaker_receivable_account"
  ],
  "fields": [
   {
@@ -57,6 +65,62 @@
    "label": "Cultivation Commission Income Account",
    "options": "Account",
    "description": "Income account for Agrolocale's 20% share of harvest value."
+  },
+  {
+   "fieldname": "sb_ic",
+   "fieldtype": "Section Break",
+   "label": "Payout company (sister company that pays subscribers)"
+  },
+  {
+   "fieldname": "payouts_via_sister_company",
+   "fieldtype": "Check",
+   "label": "Subscriber payouts are made by a sister company",
+   "default": "0",
+   "description": "Tick when another company (e.g. Foodlocale) buys the harvest and pays subscribers on this company's behalf."
+  },
+  {
+   "fieldname": "payout_company",
+   "fieldtype": "Link",
+   "label": "Payout Company",
+   "options": "Company",
+   "depends_on": "payouts_via_sister_company",
+   "description": "The company whose bank account the subscribers are paid from."
+  },
+  {
+   "fieldname": "payout_bank_account",
+   "fieldtype": "Link",
+   "label": "Payout Bank Account",
+   "options": "Account",
+   "depends_on": "payouts_via_sister_company",
+   "description": "Bank account in the payout company used to pay subscribers (e.g. Globus Foodlocale)."
+  },
+  {
+   "fieldname": "cb_ic",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "intercompany_supplier",
+   "fieldtype": "Link",
+   "label": "This Company as Supplier",
+   "options": "Supplier",
+   "depends_on": "payouts_via_sister_company",
+   "description": "How this company appears as a supplier in the payout company's books. Each payout reduces what the payout company owes it."
+  },
+  {
+   "fieldname": "intercompany_payable_account",
+   "fieldtype": "Link",
+   "label": "Payable Account (payout company)",
+   "options": "Account",
+   "depends_on": "payouts_via_sister_company",
+   "description": "Creditors account in the payout company that carries what it owes this company."
+  },
+  {
+   "fieldname": "offtaker_receivable_account",
+   "fieldtype": "Link",
+   "label": "Receivable Account (this company)",
+   "options": "Account",
+   "depends_on": "payouts_via_sister_company",
+   "description": "Debtors account carrying what the off-taker owes for harvest. Left blank, the harvest invoice's own receivable account is used."
   }
  ],
  "links": [],

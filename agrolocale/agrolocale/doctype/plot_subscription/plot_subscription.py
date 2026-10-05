@@ -105,7 +105,7 @@ class PlotSubscription(Document):
         mult = {"Plot": 1, "Acre": ppa, "5 Acres": 5 * ppa, "10 Acres": 10 * ppa}
         total_plots, land_value = 0, 0.0
         for u in self.sold_units:
-            pc = cint(u.qty) * mult.get(u.unit_type, 1)
+            pc = cint(flt(u.qty) * flt(mult.get(u.unit_type, 1)))
             u.plot_count = pc
             u.line_total = flt(u.qty) * flt(u.rate)
             total_plots += pc
@@ -132,7 +132,7 @@ class PlotSubscription(Document):
         mapping, idx = [], 0
         for u in self.sold_units:
             label = "Plot" if u.unit_type == "Plot" else f"Part of {u.unit_type}"
-            for _ in range(cint(u.qty) * mult.get(u.unit_type, 1)):
+            for _ in range(cint(flt(u.qty) * flt(mult.get(u.unit_type, 1)))):
                 mapping.append((available[idx], label)); idx += 1
         so = frappe.get_doc({
             "doctype": "Sales Order", "customer": self.subscriber,
