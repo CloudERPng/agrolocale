@@ -45,10 +45,14 @@ def get_subscription_paid(sub_name, sub=None):
     if sub is None:
         sub = frappe.db.get_value("Plot Subscription", sub_name,
             ["sales_order", "sales_invoice"], as_dict=True)
-    if not sub or not sub.sales_order:
+    if not sub:
+        return 0.0, 0.0
+    # Callers may hand this a plain dict, which has no attribute access.
+    sub = frappe._dict(sub)
+    if not sub.get("sales_order"):
         return 0.0, 0.0
 
-    so = frappe.db.get_value("Sales Order", sub.sales_order,
+    so = frappe.db.get_value("Sales Order", sub.get("sales_order"),
         ["advance_paid", "rounded_total", "grand_total", "docstatus"], as_dict=True)
     if not so or so.docstatus != 1:
         # Deleted, draft or cancelled order - nothing reliable to measure against.
@@ -58,7 +62,7 @@ def get_subscription_paid(sub_name, sub=None):
     paid = flt(so.advance_paid)
 
     if sub.get("sales_invoice"):
-        si = frappe.db.get_value("Sales Invoice", sub.sales_invoice,
+        si = frappe.db.get_value("Sales Invoice", sub.get("sales_invoice"),
             ["rounded_total", "grand_total", "outstanding_amount", "docstatus"], as_dict=True)
         if si and si.docstatus == 1:
             si_total = flt(si.rounded_total) or flt(si.grand_total)
