@@ -16,12 +16,19 @@ def execute(filters=None):
     if filters.get("estate"):
         conds.append("ps.estate=%(estate)s"); vals["estate"]=filters["estate"]
     where = " and ".join(conds)
+    # `advance_paid` empties out once the completion invoice absorbs the advances,
+    # so what the invoice has settled is added back in. Without this a fully-paid
+    # contract shows here as owing its entire value.
     rows = frappe.db.sql(f'''
         select ps.name, ps.subscriber, ps.estate, ps.total_contract_value,
-               coalesce(so.advance_paid,0) paid,
-               coalesce(so.rounded_total, so.grand_total, ps.total_contract_value) - coalesce(so.advance_paid,0) outstanding
+               coalesce(so.advance_paid,0)
+                 + coalesce(coalesce(si.rounded_total, si.grand_total) - si.outstanding_amount, 0) paid,
+               coalesce(so.rounded_total, so.grand_total, ps.total_contract_value)
+                 - coalesce(so.advance_paid,0)
+                 - coalesce(coalesce(si.rounded_total, si.grand_total) - si.outstanding_amount, 0) outstanding
         from `tabPlot Subscription` ps
         left join `tabSales Order` so on so.name=ps.sales_order
+        left join `tabSales Invoice` si on si.name=ps.sales_invoice and si.docstatus=1
         where {where}
         order by outstanding desc''', vals, as_dict=True)
     data = rows

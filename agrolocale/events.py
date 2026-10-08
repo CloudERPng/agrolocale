@@ -25,23 +25,69 @@ def payment_entry_on_cancel(doc, method=None):
         recompute_subscription(sub)
 
 
+def get_subscription_paid(sub_name, sub=None):
+    """Total cash received against a subscription's contract, and the contract total.
+
+    Reading the Sales Order's `advance_paid` on its own is WRONG once the
+    completion invoice exists. When that Sales Invoice is submitted with
+    `allocate_advances_automatically`, ERPNext moves the Payment Entry references
+    off the Sales Order and onto the invoice, then recomputes `advance_paid` -
+    which collapses to zero. A fully-paid contract then looks completely unpaid
+    the day after it is invoiced.
+
+    Adding what the invoice itself has settled (grand total less outstanding)
+    keeps the figure stable across that hand-over: whatever leaves `advance_paid`
+    arrives in the invoice, so the sum does not move.
+
+    Returns (paid, total). Both are 0 when there is no usable Sales Order, which
+    callers should read as "nothing to judge" rather than "nothing was paid".
+    """
+    if sub is None:
+        sub = frappe.db.get_value("Plot Subscription", sub_name,
+            ["sales_order", "sales_invoice"], as_dict=True)
+    if not sub or not sub.sales_order:
+        return 0.0, 0.0
+
+    so = frappe.db.get_value("Sales Order", sub.sales_order,
+        ["advance_paid", "rounded_total", "grand_total", "docstatus"], as_dict=True)
+    if not so or so.docstatus != 1:
+        # Deleted, draft or cancelled order - nothing reliable to measure against.
+        return 0.0, 0.0
+
+    total = flt(so.rounded_total) or flt(so.grand_total)
+    paid = flt(so.advance_paid)
+
+    if sub.get("sales_invoice"):
+        si = frappe.db.get_value("Sales Invoice", sub.sales_invoice,
+            ["rounded_total", "grand_total", "outstanding_amount", "docstatus"], as_dict=True)
+        if si and si.docstatus == 1:
+            si_total = flt(si.rounded_total) or flt(si.grand_total)
+            paid += flt(si_total) - flt(si.outstanding_amount)
+
+    return flt(paid, 2), flt(total, 2)
+
+
 def recompute_subscription(sub_name):
     """Update installment statuses and allocation status of a Plot Subscription
-    from how much has been paid against its Sales Order. On full payment, post a
-    completion Sales Invoice (queued); on reversal, cancel it."""
+    from how much has been paid against its contract. On full payment, post a
+    completion Sales Invoice (queued).
+
+    This routine NEVER cancels a submitted Sales Invoice. It runs unattended from
+    the nightly aging job as Administrator, and a submitted invoice is a tax
+    document: if the numbers stop agreeing, that is for a person to look at."""
     sub = frappe.db.get_value("Plot Subscription", sub_name,
         ["sales_order", "subscription_status", "sales_invoice"], as_dict=True)
     if not sub or not sub.sales_order:
         return
 
-    so = frappe.db.get_value("Sales Order", sub.sales_order,
-        ["advance_paid", "rounded_total", "grand_total"], as_dict=True)
-    if not so:
+    if not frappe.db.exists("Sales Order", sub.sales_order):
         # The order was deleted. Leave the schedule untouched rather than crashing
         # the nightly job or the payment that triggered this.
         return
-    paid = flt(so.advance_paid)
-    total = flt(so.rounded_total) or flt(so.grand_total)
+
+    paid, total = get_subscription_paid(sub_name, sub)
+    if not total:
+        return
     today = getdate(nowdate())
 
     # Installment statuses, oldest-first against the amount paid.
@@ -87,14 +133,17 @@ def recompute_subscription(sub_name):
             # roll back or block the payment that triggered it.
             frappe.enqueue("agrolocale.events.create_completion_invoice",
                            queue="short", enqueue_after_commit=True, sub_name=sub_name)
+    elif sub.sales_invoice:
+        # An invoice has already been raised, so the contract was complete at some
+        # point. The balance moving now means a payment was reversed, amended or
+        # reallocated - all of which need a human decision. Flag it; change nothing.
+        flag_invoice_shortfall(sub_name, sub.sales_invoice, paid, total)
     else:
         if sub.subscription_status == "Allocated":
             frappe.db.set_value("Plot Subscription", sub_name, "subscription_status", "Active")
             for lp in frappe.get_all("Land Plot",
                     {"plot_subscription": sub_name, "status": "Allocated"}, pluck="name"):
                 frappe.db.set_value("Land Plot", lp, "status", "Reserved")
-        if sub.sales_invoice:
-            cancel_completion_invoice(sub_name, sub.sales_invoice)
 
 
 def create_completion_invoice(sub_name):
@@ -126,12 +175,39 @@ def create_completion_invoice(sub_name):
         frappe.log_error(frappe.get_traceback(), "Agrolocale: completion invoice failed")
 
 
-def cancel_completion_invoice(sub_name, si_name):
+def flag_invoice_shortfall(sub_name, si_name, paid, total):
+    """Record that an invoiced subscription no longer looks fully paid, and leave
+    everything exactly as it is.
+
+    This replaces an earlier routine that cancelled the Sales Invoice outright.
+    That was wrong twice over: it destroyed a submitted tax document on the
+    strength of a derived balance, and it ran unattended from the nightly job as
+    Administrator, so a single bad reading cancelled invoices in bulk overnight.
+    Accounting corrections are reversed by a person, with a credit note."""
+    shortfall = flt(total) - flt(paid)
+    if shortfall <= 0.005:
+        return
+
+    # One comment per shortfall amount, so the nightly job does not re-post the
+    # same note every day.
+    marker = f"agrolocale-shortfall:{si_name}:{shortfall:.2f}"
+    if frappe.db.exists("Comment", {"reference_doctype": "Plot Subscription",
+                                    "reference_name": sub_name,
+                                    "content": ["like", f"%{marker}%"]}):
+        return
     try:
-        if frappe.db.get_value("Sales Invoice", si_name, "docstatus") == 1:
-            si = frappe.get_doc("Sales Invoice", si_name)
-            si.flags.ignore_links = True
-            si.cancel()
-        frappe.db.set_value("Plot Subscription", sub_name, "sales_invoice", None)
+        frappe.get_doc({
+            "doctype": "Comment", "comment_type": "Comment",
+            "reference_doctype": "Plot Subscription", "reference_name": sub_name,
+            "content": (
+                f"<b>Payment shortfall after invoicing.</b> {si_name} was raised when this "
+                f"contract was fully paid, but the amount received now reads "
+                f"{paid:,.2f} against a contract value of {total:,.2f} "
+                f"(short by {shortfall:,.2f}).<br><br>"
+                "Usually a Payment Entry was cancelled, amended or reallocated. "
+                "The invoice has been left submitted and untouched &mdash; reverse it with a "
+                "credit note if that is genuinely what is needed. "
+                f"<!-- {marker} -->"),
+        }).insert(ignore_permissions=True)
     except Exception:
-        frappe.log_error(frappe.get_traceback(), "Agrolocale: completion invoice cancel failed")
+        frappe.log_error(frappe.get_traceback(), "Agrolocale: shortfall flag failed")

@@ -9,9 +9,15 @@ def process_installment_aging():
     today = getdate(nowdate())
 
     # Keep installment + allocation statuses current for every live subscription.
+    # Each one is isolated: a single unhealthy subscription must not abort the run
+    # and leave the rest of the book un-aged.
     for name in frappe.get_all("Plot Subscription",
             filters={"docstatus": 1, "sales_order": ["is", "set"]}, pluck="name"):
-        recompute_subscription(name)
+        try:
+            recompute_subscription(name)
+        except Exception:
+            frappe.log_error(frappe.get_traceback(),
+                             f"Agrolocale: aging failed for {name}")
 
     # Flag long-overdue subscriptions as In Default.
     rows = frappe.db.sql("""

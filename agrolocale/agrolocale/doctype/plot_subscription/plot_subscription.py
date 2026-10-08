@@ -180,12 +180,12 @@ class PlotSubscription(Document):
         deleted or cancelled. This runs when the form opens, so it must never raise."""
         if not self.sales_order:
             return 0
-        so = frappe.db.get_value("Sales Order", self.sales_order,
-            ["advance_paid", "rounded_total", "grand_total", "docstatus"], as_dict=True)
-        if not so or so.docstatus != 1:
+        from agrolocale.events import get_subscription_paid
+        paid, total = get_subscription_paid(self.name, {
+            "sales_order": self.sales_order, "sales_invoice": self.get("sales_invoice")})
+        if not total:
             return 0
-        total = flt(so.rounded_total) or flt(so.grand_total)
-        return flt(total - flt(so.advance_paid), 2)
+        return flt(max(total - paid, 0), 2)
 
     @frappe.whitelist()
     def sales_order_status(self):

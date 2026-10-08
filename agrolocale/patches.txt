@@ -3,3 +3,4 @@ agrolocale.patches.backfill_cycle_costing
 agrolocale.patches.backfill_batch_setup_invoice
 agrolocale.patches.backfill_land_cost_center
 agrolocale.patches.release_closed_entitlements
+agrolocale.patches.resync_subscription_paid
