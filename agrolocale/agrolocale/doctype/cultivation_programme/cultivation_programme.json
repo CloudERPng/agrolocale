@@ -26,7 +26,8 @@
   "crop_mix",
   "sb_cost",
   "warehouse",
-  "cost_center"
+  "cost_center",
+  "amended_from"
  ],
  "fields": [
   {
@@ -168,6 +169,16 @@
    "options": "Cost Center",
    "fetch_from": "farm.cost_center",
    "allow_on_submit": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Cultivation Programme",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
   }
  ],
  "links": [],

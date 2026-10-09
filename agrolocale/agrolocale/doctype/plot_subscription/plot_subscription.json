@@ -41,7 +41,8 @@
   "sb4",
   "allocated_plots",
   "sales_order",
-  "sales_invoice"
+  "sales_invoice",
+  "amended_from"
  ],
  "fields": [
   {
@@ -275,6 +276,16 @@
    "label": "Sales Invoice",
    "options": "Sales Invoice",
    "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Plot Subscription",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
   }
  ],
  "links": [],

@@ -28,7 +28,8 @@
   "cost_center",
   "cb_cost",
   "project",
-  "total_input_cost"
+  "total_input_cost",
+  "amended_from"
  ],
  "fields": [
   {
@@ -183,6 +184,16 @@
    "label": "Input Cost to Date",
    "read_only": 1,
    "description": "Value of materials issued to this cycle."
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Cultivation Cycle",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
   }
  ],
  "links": [],

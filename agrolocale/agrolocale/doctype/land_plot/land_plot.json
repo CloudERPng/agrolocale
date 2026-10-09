@@ -68,7 +68,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Available\nReserved\nAllocated\nSold\nResold\nRefunded",
+   "options": "Available\nReserved\nAllocated\nSold\nResold\nRefunded\nWithdrawn",
    "default": "Available",
    "in_list_view": 1
   },

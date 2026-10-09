@@ -20,7 +20,8 @@
   "revenue_journal_entry",
   "payout_journal_entry",
   "off_taker_invoice",
-  "offtaker_purchase_invoice"
+  "offtaker_purchase_invoice",
+  "amended_from"
  ],
  "fields": [
   {
@@ -122,6 +123,16 @@
    "label": "Purchase Invoice (payout company)",
    "options": "Purchase Invoice",
    "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Harvest Settlement",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
   }
  ],
  "links": [],

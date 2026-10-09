@@ -198,3 +198,233 @@ def resync_subscriptions():
             print(f"  failed {name}")
     frappe.db.commit()
     print(f"Resynced {ok} of {len(names)} subscriptions.")
+
+
+# ---------------------------------------------------------------------------
+# Land Acquisition cleanup
+#
+# `on_cancel` now removes the plots an acquisition generated, but anything
+# cancelled before that existed left its plots standing. These two run the same
+# logic after the fact.
+# ---------------------------------------------------------------------------
+
+def inspect_acquisition(name):
+    """Show what an acquisition generated and whether it can be cleaned up."""
+    acq = frappe.db.get_value("Land Acquisition", name,
+        ["name", "estate", "docstatus", "number_of_plots", "hectares_acquired",
+         "plots_per_hectare", "plots_generated", "purchase_invoice",
+         "total_acquisition_cost"], as_dict=True)
+    if not acq:
+        print(f"No Land Acquisition named {name}.")
+        return
+
+    states = {0: "Draft", 1: "Submitted", 2: "Cancelled"}
+    print(f"{acq.name}  estate={acq.estate}  status={states.get(acq.docstatus)}")
+    print(f"  number_of_plots={acq.number_of_plots}  hectares={acq.hectares_acquired} "
+          f"x per_hectare={acq.plots_per_hectare}")
+    print(f"  plots_generated={acq.plots_generated}  purchase_invoice={acq.purchase_invoice}")
+
+    plots = frappe.get_all("Land Plot", filters={"source_acquisition": name},
+                           fields=["name", "status", "plot_subscription"])
+    print(f"\n  {len(plots)} plot(s) still exist from this acquisition:")
+    by_status = {}
+    for p in plots:
+        by_status.setdefault(p.status, []).append(p)
+    for status, group in sorted(by_status.items()):
+        print(f"    {status:<12} {len(group)}")
+
+    in_use = [p for p in plots if p.status not in ("Available", "Withdrawn") or p.plot_subscription]
+    if in_use:
+        subs = sorted({p.plot_subscription for p in in_use if p.plot_subscription})
+        print(f"\n  CANNOT CLEAN UP - {len(in_use)} plot(s) are spoken for.")
+        if subs:
+            print(f"  Subscriptions: {', '.join(subs)}")
+        print("  Raise a separate acquisition for the extra plots instead.")
+    else:
+        print(f"\n  SAFE TO CLEAN UP - all {len(plots)} plots are Available.")
+        print(f"  Run: clean_cancelled_acquisition('{name}')")
+    return acq
+
+
+def clean_cancelled_acquisition(name):
+    """Delete the unsold plots left behind by an acquisition that was cancelled
+    before `on_cancel` existed. Refuses if any plot is spoken for."""
+    acq = frappe.db.get_value("Land Acquisition", name, ["docstatus"], as_dict=True)
+    if not acq:
+        print(f"No Land Acquisition named {name}.")
+        return
+    if acq.docstatus != 2:
+        print(f"{name} is not cancelled (docstatus={acq.docstatus}). "
+              "Cancel it in the UI - that now cleans up by itself.")
+        return
+
+    plots = frappe.get_all("Land Plot", filters={"source_acquisition": name},
+                           fields=["name", "status", "plot_subscription"])
+    in_use = [p for p in plots if p.status not in ("Available", "Withdrawn") or p.plot_subscription]
+    if in_use:
+        subs = sorted({p.plot_subscription for p in in_use if p.plot_subscription})
+        print(f"REFUSED - {len(in_use)} of {len(plots)} plots are reserved, allocated or sold.")
+        if subs:
+            print(f"Subscriptions: {', '.join(subs)}")
+        return
+
+    for p in plots:
+        frappe.delete_doc("Land Plot", p.name, ignore_permissions=True, force=True)
+    frappe.db.set_value("Land Acquisition", name,
+                        {"plots_generated": 0, "cost_per_plot": 0})
+    frappe.db.commit()
+    print(f"Removed {len(plots)} unsold plot(s) from {name}.")
+    print("Now amend the acquisition, set the correct plot count, and submit.")
+
+
+def restore_cancelled_acquisition(name):
+    """Return a wrongly-cancelled Land Acquisition to Submitted.
+
+    Only valid where the cancellation had no accounting effect and the plots it
+    generated are still on the books - which is the case when the acquisition
+    was cancelled purely to edit the plot count. The document is put back
+    exactly as it was: the plots already exist, `plots_generated` is already
+    set, so nothing is re-run and nothing is created.
+
+    Every condition is checked first and the restore is refused if any fails."""
+    acq = frappe.db.get_value("Land Acquisition", name,
+        ["name", "estate", "docstatus", "purchase_invoice", "total_acquisition_cost",
+         "plots_generated"], as_dict=True)
+    if not acq:
+        print(f"No Land Acquisition named {name}.")
+        return
+
+    problems = []
+    if acq.docstatus != 2:
+        problems.append(f"it is not cancelled (docstatus={acq.docstatus})")
+
+    plots = frappe.db.count("Land Plot", {"source_acquisition": name})
+    if not plots:
+        problems.append("it has no plots left, so there is nothing to re-parent - "
+                        "raise a fresh acquisition instead")
+
+    if acq.purchase_invoice:
+        pi = frappe.db.get_value("Purchase Invoice", acq.purchase_invoice, "docstatus")
+        if pi == 2:
+            problems.append(f"its Purchase Invoice {acq.purchase_invoice} was cancelled too "
+                            "and would need raising again by hand")
+
+    gl = frappe.db.count("GL Entry", {"voucher_type": "Land Acquisition", "voucher_no": name})
+    if gl:
+        problems.append(f"it has {gl} GL entries, so the cancellation moved money")
+
+    amended = frappe.db.get_value("Land Acquisition", {"amended_from": name}, "name")
+    if amended:
+        problems.append(f"it has already been amended into {amended}")
+
+    if problems:
+        print(f"REFUSED - {name} cannot be restored this way:")
+        for p in problems:
+            print(f"  - {p}")
+        return
+
+    frappe.db.set_value("Land Acquisition", name, "docstatus", 1)
+    frappe.get_doc({
+        "doctype": "Comment", "comment_type": "Comment",
+        "reference_doctype": "Land Acquisition", "reference_name": name,
+        "content": (
+            "<b>Cancellation reversed.</b> This acquisition was cancelled while its "
+            f"{plots} plots were still reserved or sold, which left them parented to a "
+            "cancelled document. It has been returned to Submitted. No plots were created "
+            "or removed and there was no accounting entry to reverse."),
+    }).insert(ignore_permissions=True)
+    frappe.db.commit()
+    print(f"{name} restored to Submitted. Its {plots} plots now have a valid parent again.")
+    print("To add more plots to this estate, raise a NEW acquisition for the extra ones only.")
+
+
+HELD_STATUSES = ("Reserved", "Allocated", "Sold", "Resold")
+
+
+def reduce_acquisition_plots(name, new_count, delete=False):
+    """Shrink an estate to `new_count` plots by taking surplus plots out of
+    inventory. Never touches a plot a subscriber holds.
+
+    Plots are marked Withdrawn by default, which keeps the record and its
+    numbering intact while removing it from what can be sold. Pass delete=True
+    to remove them outright, only sensible for plots created in error.
+
+    An estate cannot shrink below the number of plots already reserved or sold.
+    If it needs to, that is a commercial problem - somebody has been sold land
+    that will not exist - and the subscriptions have to be unwound first."""
+    new_count = int(new_count)
+    acq = frappe.db.get_value("Land Acquisition", name,
+        ["name", "estate", "docstatus", "number_of_plots",
+         "total_acquisition_cost"], as_dict=True)
+    if not acq:
+        print(f"No Land Acquisition named {name}.")
+        return
+    if acq.docstatus == 2:
+        print(f"{name} is cancelled. Restore it first with "
+              f"restore_cancelled_acquisition('{name}').")
+        return
+
+    plots = frappe.get_all("Land Plot", filters={"source_acquisition": name},
+                           fields=["name", "plot_number", "status", "plot_subscription"],
+                           order_by="plot_number asc")
+    total = len(plots)
+    held = [p for p in plots if p.status in HELD_STATUSES or p.plot_subscription]
+    free = [p for p in plots if p not in held and p.status == "Available"]
+
+    print(f"{name} ({acq.estate}): {total} plot(s) on the books - "
+          f"{len(held)} held, {len(free)} available.")
+
+    if new_count >= total:
+        print(f"\nNothing to do - {new_count} is not fewer than the {total} that exist.")
+        print("To add plots, raise a NEW acquisition covering only the extra ones.")
+        return
+
+    surplus = total - new_count
+
+    if new_count < len(held):
+        subs = sorted({p.plot_subscription for p in held if p.plot_subscription})
+        print(f"\nREFUSED - {len(held)} plot(s) are already reserved or sold, so this "
+              f"estate cannot go below {len(held)} plots.")
+        print(f"Going to {new_count} would strand {len(held) - new_count} subscriber(s).")
+        if subs:
+            print(f"\n{len(subs)} subscription(s) hold these plots:")
+            for s in subs:
+                cnt = sum(1 for p in held if p.plot_subscription == s)
+                sub = frappe.db.get_value("Plot Subscription", s,
+                    ["subscriber", "subscription_status"], as_dict=True) or {}
+                print(f"  {s}  {str(sub.get('subscriber') or ''):<34} "
+                      f"{sub.get('subscription_status') or '':<12} {cnt} plot(s)")
+        print("\nTo go lower, those subscriptions must be cancelled or re-allocated to "
+              "another estate first. That is a decision for the client, not a data fix.")
+        return
+
+    if surplus > len(free):
+        print(f"\nREFUSED - {surplus} plot(s) need removing but only {len(free)} are "
+              "available. Free up the difference first.")
+        return
+
+    # Take them off the end, so the numbering of the plots people hold is untouched.
+    chosen = sorted(free, key=lambda p: p.plot_number or 0, reverse=True)[:surplus]
+    for p in chosen:
+        if delete:
+            frappe.delete_doc("Land Plot", p.name, ignore_permissions=True, force=True)
+        else:
+            frappe.db.set_value("Land Plot", p.name, "status", "Withdrawn")
+
+    unit = flt(acq.total_acquisition_cost) / new_count if new_count else 0
+    frappe.db.set_value("Land Acquisition", name,
+                        {"number_of_plots": new_count, "cost_per_plot": unit})
+    frappe.get_doc({
+        "doctype": "Comment", "comment_type": "Comment",
+        "reference_doctype": "Land Acquisition", "reference_name": name,
+        "content": (f"<b>Plot count reduced.</b> {total} &rarr; {new_count}. "
+                    f"{surplus} unsold plot(s) "
+                    f"{'deleted' if delete else 'marked Withdrawn'}; "
+                    f"cost per plot recalculated to {unit:,.2f}."),
+    }).insert(ignore_permissions=True)
+    frappe.db.commit()
+
+    verb = "deleted" if delete else "withdrawn"
+    print(f"\n{surplus} plot(s) {verb}: "
+          + ", ".join(str(p.plot_number) for p in sorted(chosen, key=lambda x: x.plot_number or 0)))
+    print(f"{name} now records {new_count} plot(s); cost per plot {unit:,.2f}.")

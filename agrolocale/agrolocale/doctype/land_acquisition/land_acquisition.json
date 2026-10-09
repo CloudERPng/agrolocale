@@ -17,7 +17,8 @@
   "total_acquisition_cost",
   "cost_per_plot",
   "plots_generated",
-  "purchase_invoice"
+  "purchase_invoice",
+  "amended_from"
  ],
  "fields": [
   {
@@ -87,20 +88,33 @@
    "fieldname": "cost_per_plot",
    "fieldtype": "Currency",
    "label": "Cost per Plot",
-   "read_only": 1
+   "read_only": 1,
+   "no_copy": 1
   },
   {
    "fieldname": "plots_generated",
    "fieldtype": "Check",
    "label": "Plots Generated",
-   "read_only": 1
+   "read_only": 1,
+   "no_copy": 1
   },
   {
    "fieldname": "purchase_invoice",
    "fieldtype": "Link",
    "label": "Purchase Invoice",
    "options": "Purchase Invoice",
-   "read_only": 1
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Land Acquisition",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
   }
  ],
  "links": [],
